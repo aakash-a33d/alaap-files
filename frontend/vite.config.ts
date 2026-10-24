@@ -6,6 +6,22 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     port: 5177,
+
+    /* Hosts the dev server will answer to, beyond localhost.
+     *
+     * Vite refuses requests whose Host header it does not recognise, and it is right
+     * to: without that check, any page the developer visits could point a name it
+     * controls at 127.0.0.1 and read this origin — which here proxies /api to the
+     * gateway and carries a live session cookie. A dev server that answers to any
+     * name is a hole straight through the same-origin policy the comment below
+     * explains we went out of our way to keep.
+     *
+     * A leading dot matches subdomains, so this allows a VS Code dev tunnel —
+     * testing on a phone, or on somebody else's machine — without allowing the
+     * whole internet the way `true` would.
+     *
+     * Only ever reachable while a tunnel is open, and only in development. */
+    allowedHosts: ['.devtunnels.ms'],
     /* The gateway is served from this origin in development.
 
        Same-origin on purpose, not convenience. The session lives in an HttpOnly
