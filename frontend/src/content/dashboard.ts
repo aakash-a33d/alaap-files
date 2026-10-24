@@ -156,17 +156,33 @@ export function formatSleep(hours: number) {
 export type Metric = 'mood' | 'sleep' | 'stress'
 export type Range = 'week' | 'month' | 'year'
 
-/** Low and high bound per metric — the y-axis, never crossed. */
+/* Low and high bound per metric — the y-axis.
+ *
+ * Each of these has to cover everything its own control can produce, or the line
+ * leaves the box and is clipped by the card. Both of the first two used to fail that:
+ *
+ *   mood   was [0, 6], the index into MOOD_SCALE. But `mood_checkins.mood_score` is
+ *          1-10 and the API rejects anything below 1, so the leftmost step — "Heavy",
+ *          the worst day somebody can report — was sent as 0 and came back 400. The
+ *          member having the heaviest day was the one who could not record it. The
+ *          seven steps are now 1-7, which the column and the API both accept.
+ *
+ *   sleep  was [4, 10] while SLEEP_MIN/SLEEP_MAX allow 0-12, so a short night or a
+ *          long one ran off the top or bottom of the chart.
+ *
+ * `projectGapped` also clamps, so a value from somewhere else — an older row, another
+ * client — is pinned to the edge rather than drawn outside the card.
+ */
 export const SCALE: Record<Metric, [number, number]> = {
-  mood: [0, 6],
-  sleep: [4, 10],
+  mood: [1, 7],
+  sleep: [0, 12],
   stress: [0, 10],
 }
 
 /** Axis captions, top to bottom, at the values they sit on. */
 export const TICKS: Record<Metric, number[]> = {
-  mood: [6, 4, 2, 0],
-  sleep: [10, 8, 6, 4],
+  mood: [7, 5, 3, 1],
+  sleep: [12, 9, 6, 3, 0],
   stress: [10, 8, 6, 4, 2],
 }
 
@@ -179,11 +195,48 @@ export const RANGE_LENGTH: Record<Range, number> = { week: 7, month: 30, year: 1
    /api/mood/checkins and leaves gaps where there is no check-in. */
 
 
-/** Axis labels along the bottom, one per drawn tick rather than per reading. */
-export function rangeLabels(range: Range): string[] {
-  if (range === 'week') return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-  if (range === 'year') return ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov']
-  return ['1', '6', '11', '16', '21', '26', '30']
+/**
+ * Axis labels along the bottom, ending today.
+ *
+ * These used to be fixed strings — Mon-Sun, 1-30, Jan-Nov — left over from when the
+ * chart came from `trend()` and the x-axis described a generic window rather than a
+ * real one. The series runs from (today - span + 1) on the left to today on the right,
+ * so the labels disagreed with it: the right-hand end read "Sun", "30" or "Nov" while
+ * the point under it was today. On the 24th of a month that put the last reading under
+ * a label six days in the future, which is a chart telling somebody they recorded a day
+ * that has not happened.
+ *
+ * The labels are laid out with `justify-between` across the plot, so label i sits at
+ * i/(count-1) of the width, and the series point at that fraction is the one it names.
+ * The last label is always today, or this month for the year view.
+ */
+export function rangeLabels(range: Range, now: Date = new Date()): string[] {
+  const dayBack = (n: number) => {
+    const d = new Date(now)
+    d.setDate(d.getDate() - n)
+    return d
+  }
+
+  if (range === 'week') {
+    const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    return Array.from({ length: 7 }, (_, i) => WEEKDAY[dayBack(6 - i).getDay()]!)
+  }
+
+  if (range === 'year') {
+    const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    // Six labels over twelve months, so every other month is named.
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now)
+      d.setDate(1)
+      d.setMonth(d.getMonth() - Math.round(((5 - i) * 11) / 5))
+      return MONTH[d.getMonth()]!
+    })
+  }
+
+  // Seven labels over thirty days: indices 0, 5, 10, 15, 19, 24, 29 counting back.
+  return Array.from({ length: 7 }, (_, i) =>
+    String(dayBack(Math.round(((6 - i) * 29) / 6)).getDate()),
+  )
 }
 
 /* --- Practice assigned or chosen ----------------------------------------- */

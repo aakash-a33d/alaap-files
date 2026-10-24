@@ -227,6 +227,29 @@ async function main() {
   check('with the latest value', history.body.checkins?.[0]?.moodScore === 6,
     String(history.body.checkins?.[0]?.moodScore));
 
+  /* Every end of every control, because the dashboard shipped for four milestones
+     sending the lowest mood step as 0 — one below what the API accepts — so the
+     member having the heaviest day got a 400 and "that could not be saved just now".
+     A scale the interface can reach and the vault refuses is the one failure mode
+     worth a standing check, and it is invisible from either side alone. */
+  const ends = [
+    ['the lowest mood step', { moodScore: 1 }],
+    ['the highest mood step', { moodScore: 7 }],
+    ['no sleep at all', { moodScore: 4, sleepHours: 0 }],
+    ['the longest night the stepper allows', { moodScore: 4, sleepHours: 12 }],
+    ['the calmest day', { moodScore: 4, stressScore: 1 }],
+    ['the heaviest day', { moodScore: 4, stressScore: 10 }],
+  ];
+  for (const [what, body] of ends) {
+    const r = await post('/api/mood/checkins', body, token);
+    check(`${what} is accepted`, r.status === 201, String(r.status));
+  }
+
+  const stressBack = await get('/api/mood/checkins?days=7', token);
+  check('and stress comes back with the check-in',
+    stressBack.body.checkins?.[0]?.stressScore === 10,
+    String(stressBack.body.checkins?.[0]?.stressScore));
+
   // ------------------------------------------------------------------------
   console.log(c.bold('\nWithdrawal stops processing and destroys nothing\n'));
 

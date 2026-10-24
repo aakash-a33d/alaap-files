@@ -133,15 +133,19 @@ async function enrol(m, mobile) {
  * The arc is a rough week easing off: bad sleep and high stress early, both improving.
  * Loosely correlated rather than locked together, because a chart where three lines
  * move as one looks generated, and because people do not work that way.
+ *
+ * Mood is 1-7, matching the dashboard's seven-step word scale — 1 "Heavy" through 7
+ * "Good". The column allows 1-10; the dashboard writes the lower seven of it.
+ * Sleep is hours, 0-12. Stress is 1-10.
  */
 const MOOD_WEEK = [
-  { back: 7, mood: 4, sleep: 5.5, stress: 7 },
-  { back: 6, mood: 3, sleep: 4.5, stress: 8 },
-  { back: 5, mood: 5, sleep: 6.5, stress: 6 },
-  { back: 4, mood: 6, sleep: 7.0, stress: 5 },
-  { back: 3, mood: 5, sleep: 6.0, stress: 6 },
-  { back: 2, mood: 7, sleep: 7.5, stress: 4 },
-  { back: 1, mood: 6, sleep: 7.0, stress: 4 },
+  { back: 7, mood: 3, sleep: 5.5, stress: 7 },
+  { back: 6, mood: 2, sleep: 4.5, stress: 8 },
+  { back: 5, mood: 3, sleep: 6.5, stress: 6 },
+  { back: 4, mood: 5, sleep: 7.0, stress: 5 },
+  { back: 3, mood: 4, sleep: 6.0, stress: 6 },
+  { back: 2, mood: 6, sleep: 7.5, stress: 4 },
+  { back: 1, mood: 5, sleep: 7.0, stress: 4 },
 ];
 
 function seedMoodHistory(pseudoId) {

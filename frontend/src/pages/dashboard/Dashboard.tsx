@@ -271,7 +271,12 @@ function projectGapped(values: (number | null)[], metric: Metric): string {
       return
     }
     const x = (i / Math.max(1, n - 1)) * VB_W
-    const y = PAD_T + (1 - (v - lo) / (hi - lo)) * SPAN
+    /* Clamped to the band. A value outside the metric's scale — a row written by an
+       older build, or a column whose range is wider than this control's — would
+       otherwise be drawn outside the viewBox and clipped by the card, which reads as
+       a chart with its top cut off rather than as a value out of range. */
+    const t = Math.max(0, Math.min(1, (v - lo) / (hi - lo)))
+    const y = PAD_T + (1 - t) * SPAN
     current.push(`${x.toFixed(1)},${y.toFixed(1)}`)
   })
   if (current.length > 0) runs.push(current.join(' L'))
@@ -285,14 +290,20 @@ function tickTop(metric: Metric, v: number) {
   return ((PAD_T + (1 - (v - lo) / (hi - lo)) * SPAN) / VB_H) * 100
 }
 
+/* Mood is 1-7 — the value stored, not the index. MOOD_SCALE is zero-based, so every
+   lookup drops one. See the note on SCALE for why it is not 0-6 any more. */
+function moodWord(score: number) {
+  return MOOD_SCALE[Math.max(0, Math.min(MOOD_SCALE.length - 1, Math.round(score) - 1))]
+}
+
 function readOut(metric: Metric, v: number) {
-  if (metric === 'mood') return MOOD_SCALE[Math.max(0, Math.min(6, Math.round(v)))]
+  if (metric === 'mood') return moodWord(v)
   if (metric === 'sleep') return formatSleep(v)
   return `${Math.round(v * 10) / 10} / 10`
 }
 
 function tickLabel(metric: Metric, v: number) {
-  if (metric === 'mood') return MOOD_SCALE[v]
+  if (metric === 'mood') return moodWord(v)
   if (metric === 'sleep') return `${v}h`
   return String(v)
 }
@@ -382,7 +393,9 @@ function Instrument({
   const best = single === 'stress' ? lo : hi
   const hardest = single === 'stress' ? hi : lo
 
-  const labels = rangeLabels(range)
+  /* Pinned per range rather than recomputed each render, so the axis cannot shift
+     under somebody who leaves the screen open across midnight. */
+  const labels = useMemo(() => rangeLabels(range), [range])
   const spanWord =
     range === 'week' ? 'last 7 days' : range === 'month' ? 'last 30 days' : 'last 12 months'
   const whenWord = single === 'sleep' ? 'last night' : 'today'
@@ -588,10 +601,13 @@ function CheckIn({
         {/* mood — seven steps, the chosen one named above them */}
         <div className={FIELD}>
           <p className={FIELD_HEADING}>Mood</p>
-          <p className={`${DISPLAY} mt-2.5 text-[1.3rem] leading-none`}>{MOOD_SCALE[mood]}</p>
+          <p className={`${DISPLAY} mt-2.5 text-[1.3rem] leading-none`}>{moodWord(mood)}</p>
           <div role="radiogroup" aria-label="Mood" className="mt-2 flex h-10 items-center gap-1.5">
+            {/* `i + 1` is the score. The dots are a seven-step word scale, but what
+                goes to the vault is 1-7 of mood_score's 1-10, because the step at
+                index 0 used to be sent as 0 and refused. */}
             {MOOD_SCALE.map((word, i) => {
-              const on = i === mood
+              const on = i + 1 === mood
               return (
                 <button
                   key={word}
@@ -599,14 +615,14 @@ function CheckIn({
                   role="radio"
                   aria-checked={on}
                   aria-label={word}
-                  onClick={() => onMood(i)}
+                  onClick={() => onMood(i + 1)}
                   className="flex h-10 flex-1 items-center justify-center"
                 >
                   <span
                     className={`rounded-full transition-all duration-150 ${
                       on
                         ? 'h-[22px] w-[22px] bg-[var(--app-gold)]'
-                        : i < mood
+                        : i + 1 < mood
                           ? 'h-[11px] w-[11px] bg-[rgb(26_24_20/0.3)]'
                           : 'h-[11px] w-[11px] bg-[rgb(26_24_20/0.14)]'
                     }`}
@@ -757,7 +773,9 @@ export default function Dashboard() {
      under the screen if it is left open across midnight. */
   const month = useMemo(() => monthShape(), [])
 
-  const [mood, setMood] = useState(3)
+  /* 4 of 1-7: "Level", the middle step. Not a guess at how somebody feels — it is
+     where the control rests until they move it, and nothing is stored until they do. */
+  const [mood, setMood] = useState(4)
   const [sleep, setSleep] = useState(6 + 40 / 60)
   const [stress, setStress] = useState(6)
   const [saved, setSaved] = useState(false)
@@ -941,7 +959,7 @@ export default function Dashboard() {
                     readings rather than costing a row of the image. */}
                 <div className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1">
                   <p className={`${LABEL} min-[560px]:mb-2 min-[560px]:w-full`}>Today so far</p>
-                  <p className={`${DISPLAY} text-[1.05rem] leading-none`}>{MOOD_SCALE[mood]}</p>
+                  <p className={`${DISPLAY} text-[1.05rem] leading-none`}>{moodWord(mood)}</p>
                   <p className="text-[0.75rem] text-[var(--app-faint)]">
                     {formatSleep(sleep)} slept
                   </p>
