@@ -1,0 +1,82 @@
+# dependencies
+node_modules/
+.pnpm-store/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# build output
+dist/
+build/
+.next/
+.turbo/
+*.tsbuildinfo
+*.egg-info/
+
+# environment and secrets — never commit real values
+.env
+.env.*
+!.env.example
+infrastructure/secrets/**/*.enc.yaml.dec
+*.pem
+*.key
+*.p12
+*.pfx
+
+# model weights and large artifacts
+ai-services/model-store/weights/**
+!ai-services/model-store/weights/.gitkeep
+ai-services/model-store/quantised/**
+!ai-services/model-store/quantised/.gitkeep
+*.gguf
+*.safetensors
+*.onnx
+
+# anything that could carry real user data
+ai-services/evaluation/datasets/**
+!ai-services/evaluation/datasets/.gitkeep
+
+# Derived training corpora. Regenerable from training/ingest.py against the
+# licensed downloads, and too large to review in a diff. The hand-authored seed
+# sets are tracked, because those ARE the reviewable artifact.
+ai-services/community-moderation/training/data/**
+!ai-services/community-moderation/training/data/.gitkeep
+!ai-services/community-moderation/training/data/synthetic-seed.*.jsonl
+!ai-services/community-moderation/training/data/sample.jsonl
+
+# Annotation batches and their keys. The key file maps an opaque vendor item id
+# back to a platform record and holds the gold answers — committing one would
+# both re-identify members and hand over the answer sheet.
+*.key.jsonl
+batch-*.jsonl
+consented-content*.jsonl
+accepted-*.jsonl
+
+# Member feedback awaiting review.
+ai-services/evaluation/datasets/feedback-queue.jsonl
+database/seeds/demo/**
+!database/seeds/demo/.gitkeep
+*.dump
+*.sql.gz
+
+# test and coverage output
+coverage/
+playwright-report/
+test-results/
+.nyc_output/
+
+# terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+# local tooling
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alaap.platform/schemas/vault-access-matrix.schema.json",
+  "title": "Vault access matrix",
+  "description": "Validates metadata/access-control/vault-access-matrix/*.yaml. Enforced at build time by tools/privacy-lint: a service may not import a vault client outside its permitted set, and a service absent from this file gets no vault access at all.",
+  "type": "object",
+  "required": ["version", "vaults", "services"],
+  "additionalProperties": false,
+
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "vaults": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/vaultName" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "services": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/serviceEntry" }
+    }
+  },
+
+  "definitions": {
+    "vaultName": { "enum": ["identity", "community", "clinical", "billing", "audit"] },
+
+    "serviceEntry": {
+      "type": "object",
+      "required": ["service", "deployable", "access"],
+      "additionalProperties": false,
+      "properties": {
+        "service": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "deployable": { "enum": ["core", "identity-isolate", "ai-tier"] },
+        "access": {
+          "type": "object",
+          "description": "Every vault must be listed explicitly. Omission is not permission.",
+          "required": ["identity", "community", "clinical", "billing", "audit"],
+          "additionalProperties": false,
+          "properties": {
+            "identity": { "$ref": "#/definitions/grant" },
+            "community": { "$ref": "#/definitions/grant" },
+            "clinical": { "$ref": "#/definitions/grant" },
+            "billing": { "$ref": "#/definitions/grant" },
+            "audit": { "$ref": "#/definitions/grant" }
+          }
+        },
+        "depends_on": {
+          "type": "array",
+          "description": "Services reached over the network. A service with effective access above none must reach it through the owning service listed here.",
+          "items": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "uniqueItems": true
+        },
+        "note": { "type": "string" }
+      }
+    },
+
+    "grant": {
+      "type": "object",
+      "required": ["direct", "effective"],
+      "additionalProperties": false,
+      "properties": {
+        "direct": {
+          "description": "Database-level access. Only the vault-owning service holds anything above none or append. This is the column privacy-lint enforces.",
+          "enum": ["none", "append", "read", "read-write"]
+        },
+        "effective": {
+          "description": "What the service can ultimately obtain through APIs, subject to consent and purpose checks.",
+          "enum": ["none", "limited", "consent-based", "approved-only", "masked", "full"]
+        },
+        "constraint": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "Narrows the grant. Required whenever effective is limited or approved-only, so a broad-sounding grant is never left unqualified."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "effective": { "enum": ["limited", "approved-only"] } },
+            "required": ["effective"]
+          },
+          "then": { "required": ["constraint"] }
+        },
+        {
+          "if": {
+            "properties": { "direct": { "enum": ["read", "read-write"] } },
+            "required": ["direct"]
+          },
+          "then": {
+            "properties": { "effective": { "enum": ["full", "approved-only"] } },
+            "description": "Direct database access implies the service owns the vault, so its effective access cannot be narrower than the grant it holds."
+          }
+        }
+      ]
+    }
+  }
+}

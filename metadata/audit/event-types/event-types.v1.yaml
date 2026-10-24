@@ -1,0 +1,399 @@
+# Audit event type registry
+#
+# `audit_events.action_type` is a foreign key to `audit_event_types`. A service
+# emitting an unregistered type fails at INSERT rather than writing an unclassifiable
+# row — and because a failed audit write fails the operation it was recording, an
+# unregistered type takes the request down with it. That is the intended severity:
+# an event nobody can classify is an event nobody will review.
+#
+# Seeded by scripts/db/migrate.mjs, which reads this file. There is no hand-written
+# SQL seed, because a second copy of this list would drift from the first.
+#
+# SENSITIVITY (1-5) drives review priority and export redaction, not access control.
+#   1  routine operational
+#   2  ordinary member activity
+#   3  another person's content, or a member's own protected record
+#   4  clinical content, or staff acting on a member
+#   5  identity disclosure, emergency access, irreversible destruction
+#
+# RETENTION
+#   security_window  short cycle, abuse and incident review
+#   long_term        the default; survives the care relationship
+#   permanent        never expires — emergency access and deletion evidence
+#
+# Reasoning: docs/backend/backend-requirements.md §8, architecture §12P
+
+version: 1
+
+# ---------------------------------------------------------------------------
+# Gateway events are DERIVED, not listed.
+#
+# The gateway emits `gateway.<domain>.<verb>` for any API group whose audit level is
+# not `none` (see backend/gateway/src/audit/middleware.ts). Listing them here by hand
+# would mean maintaining a second copy of api-groups.v1.yaml and keeping the verb map
+# in step with the code. Instead the seeder derives them from the route policy using
+# the same rule, and applies the sensitivity below by the group's audit level.
+# ---------------------------------------------------------------------------
+gateway_derived:
+  verbs: [read, create, update, delete, other]
+  # An `all`-audited group is one where the READ is itself the sensitive act.
+  by_audit_level:
+    writes:
+      sensitivity: 3
+      retention: long_term
+    all:
+      sensitivity: 4
+      retention: long_term
+  # Groups whose events outrank their audit level, named explicitly.
+  overrides:
+    /api/break-glass:
+      sensitivity: 5
+      retention: permanent
+    /api/data-rights:
+      sensitivity: 5
+      retention: permanent
+
+# ---------------------------------------------------------------------------
+# Service events. Emitted at the point a vault is actually opened, where the
+# record id and the consent decision are known — things the gateway cannot see.
+# ---------------------------------------------------------------------------
+events:
+
+  # --- authentication ------------------------------------------------------
+  #
+  # /api/auth is unaudited at the gateway, because there is no session yet to
+  # attribute an event to. auth-service writes these itself, once it knows who the
+  # account is.
+  #
+  # Note what is NOT recorded anywhere in this group: the mobile number. These events
+  # carry the account id and the pseudo id, never the number that was verified.
+
+  - id: auth.account.created
+    sensitivity: 3
+    retention: long_term
+
+  - id: auth.otp.issued
+    sensitivity: 2
+    retention: security_window
+    note: >-
+      Security-window retention, not long term. A high volume of low-value rows whose
+      only use is abuse detection — and holding "someone tried to register with this
+      number" indefinitely is retention without a purpose.
+
+  - id: auth.otp.verified
+    sensitivity: 2
+    retention: security_window
+
+  - id: auth.otp.failed
+    sensitivity: 2
+    retention: security_window
+    note: A burst against one number is the signal this row exists for.
+
+  - id: auth.session.minted
+    sensitivity: 2
+    retention: long_term
+
+  - id: auth.session.revoked
+    sensitivity: 2
+    retention: long_term
+
+  - id: auth.sessions.revoked_all
+    sensitivity: 3
+    retention: long_term
+    note: >-
+      Log out everywhere. Either the member asked, or a security event forced it, and
+      an incident review needs to be able to tell which.
+
+  - id: auth.recovery_code.used
+    sensitivity: 4
+    retention: permanent
+    note: >-
+      A recovery code is the last door — it works when the member has lost the phone
+      number itself, so nothing the platform can send is involved. An account taken
+      over this way leaves no other trace, which is why this row never expires.
+
+  - id: auth.recovery_code.failed
+    sensitivity: 3
+    retention: long_term
+    note: Repeated failures against one handle are somebody working through a found sheet.
+
+  - id: auth.recovery_codes.issued
+    sensitivity: 3
+    retention: long_term
+    note: >-
+      Regenerating a bundle invalidates the previous one. If a member later cannot
+      recover, this is the row that says when their old codes stopped working.
+
+  - id: auth.device.registered
+    sensitivity: 3
+    retention: long_term
+    note: >-
+      A device the account has not been used on before. On this platform the person
+      signing in from somewhere new is often somebody in the same house as the member,
+      so this is the row a member's own security review starts from. Carries no label,
+      no hash and nothing derived from the user-agent — that this account gained a
+      device is the fact worth keeping; which device is not.
+
+  - id: auth.device.revoked
+    sensitivity: 3
+    retention: long_term
+    note: >-
+      A member signed a device out. Records how many sessions ended with it. Note what
+      it does NOT mean: a device is not a credential, so this ends sessions rather
+      than barring the device, and somebody who can still authenticate can return.
+
+  - id: auth.passkey.registered
+    sensitivity: 3
+    retention: long_term
+
+  - id: auth.passkey.revoked
+    sensitivity: 3
+    retention: long_term
+
+  # --- pseudonym -----------------------------------------------------------
+  - id: pseudonym.persona.created
+    sensitivity: 2
+    retention: long_term
+
+  # RETIRED. Member-chosen usernames were removed before launch: every handle is now
+  # drawn from metadata/pseudonyms/handle-words.v1.yaml, so nothing emits this. It
+  # stays registered because audit_events.action_type is a foreign key and historical
+  # rows must keep resolving.
+  - id: pseudonym.username.chosen
+    sensitivity: 3
+    retention: long_term
+    note: Retired. Kept registered so historical rows keep resolving.
+
+  # RETIRED. Handles became permanent in community-vault/0002_permanent_handles.sql,
+  # so nothing emits this any more. It stays registered because audit_events.action_type
+  # is a foreign key and historical rows must keep resolving — a registered type is
+  # removed only when no row can reference it, which for an append-only log is never.
+  - id: pseudonym.handle.rotated
+    sensitivity: 2
+    retention: long_term
+    note: Retired. Kept registered so historical rows keep resolving.
+
+  # --- identity vault ------------------------------------------------------
+  - id: identity.record.read
+    sensitivity: 5
+    retention: permanent
+    note: A real name or verified number was decrypted. Never routine.
+
+  - id: identity.record.write
+    sensitivity: 4
+    retention: long_term
+
+  - id: identity.tier.raised
+    sensitivity: 4
+    retention: long_term
+    note: A member moved up an identity tier — care booking, psychiatrist, subsidy.
+
+  - id: identity.emergency_contact.registered
+    sensitivity: 4
+    retention: long_term
+
+  - id: identity.emergency_contact.verified
+    sensitivity: 4
+    retention: long_term
+    note: The contact themselves confirmed, independently. Consent by a third party.
+
+  - id: identity.emergency_contact.withdrawn
+    sensitivity: 4
+    retention: permanent
+    note: >-
+      Permanent because the absence of a contact is a fact the safety runbook has to
+      be able to reconstruct after an incident.
+
+  - id: identity.emergency_contact.disclosed
+    sensitivity: 5
+    retention: permanent
+    note: >-
+      The single most sensitive event on the platform. Only reachable through an
+      approved break-glass case.
+
+  # --- break glass ---------------------------------------------------------
+  - id: break_glass.case.opened
+    sensitivity: 5
+    retention: permanent
+
+  - id: break_glass.review.first
+    sensitivity: 5
+    retention: permanent
+
+  - id: break_glass.review.second
+    sensitivity: 5
+    retention: permanent
+    note: The second authorised approver. Neither reviewer can be the other.
+
+  - id: break_glass.threshold.share_submitted
+    sensitivity: 5
+    retention: permanent
+
+  - id: break_glass.access.granted
+    sensitivity: 5
+    retention: permanent
+
+  - id: break_glass.access.expired
+    sensitivity: 5
+    retention: permanent
+
+  - id: break_glass.case.closed
+    sensitivity: 5
+    retention: permanent
+
+  - id: break_glass.case.refused
+    sensitivity: 5
+    retention: permanent
+    note: >-
+      A refused case is evidence too. A pattern of refusals is exactly what a
+      post-incident review needs to see.
+
+  # --- clinical vault ------------------------------------------------------
+  - id: clinical.record.decrypted
+    sensitivity: 4
+    retention: long_term
+    note: >-
+      Every decrypt, whoever performed it. Maximum Privacy records never produce this
+      event because the platform holds no key for them.
+
+  - id: clinical.journal.written
+    sensitivity: 3
+    retention: long_term
+
+  - id: clinical.journal.deleted
+    sensitivity: 3
+    retention: permanent
+    note: Deletion evidence outlives the record it destroyed.
+
+  - id: clinical.story.written
+    sensitivity: 3
+    retention: long_term
+
+  - id: clinical.story.shared
+    sensitivity: 3
+    retention: long_term
+    note: >-
+      A copy was published to the community vault. The original stays clinical; this
+      records the moment the two diverged.
+
+  - id: clinical.mood.recorded
+    sensitivity: 2
+    retention: long_term
+
+  - id: clinical.therapist.access
+    sensitivity: 4
+    retention: long_term
+    note: A therapist opened a member record under an active care relationship.
+
+  - id: clinical.ai.analysed
+    sensitivity: 4
+    retention: long_term
+    note: >-
+      Consented AI processing of clinical content. Carries the purpose and the
+      consent scope, never the content.
+
+  # --- consent -------------------------------------------------------------
+  - id: consent.granted
+    sensitivity: 3
+    retention: long_term
+
+  - id: consent.withdrawn
+    sensitivity: 3
+    retention: permanent
+    note: >-
+      Permanent. Proving that a withdrawal was honoured requires knowing exactly when
+      it was made, indefinitely.
+
+  - id: consent.expired
+    sensitivity: 2
+    retention: long_term
+
+  - id: consent.policy.superseded
+    sensitivity: 3
+    retention: permanent
+
+  # --- safety --------------------------------------------------------------
+  - id: safety.signal.raised
+    sensitivity: 4
+    retention: long_term
+    note: Detection only. Acting on it is a separate, higher-tier event.
+
+  - id: safety.signal.reviewed
+    sensitivity: 4
+    retention: long_term
+
+  - id: safety.escalated
+    sensitivity: 5
+    retention: permanent
+
+  # --- moderation ----------------------------------------------------------
+  - id: moderation.verdict.issued
+    sensitivity: 2
+    retention: security_window
+
+  - id: moderation.appeal.decided
+    sensitivity: 3
+    retention: long_term
+
+  - id: moderation.account.restricted
+    sensitivity: 3
+    retention: long_term
+
+  # --- billing and subsidy -------------------------------------------------
+  - id: billing.subscription.changed
+    sensitivity: 2
+    retention: long_term
+
+  - id: billing.payment.recorded
+    sensitivity: 2
+    retention: long_term
+
+  - id: subsidy.allocation.claimed
+    sensitivity: 3
+    retention: long_term
+    note: >-
+      A partner's fund paid part of someone's care. The partner never learns whose —
+      that separation is what this event exists to evidence.
+
+  # --- data rights ---------------------------------------------------------
+  - id: data_rights.export.requested
+    sensitivity: 4
+    retention: permanent
+
+  - id: data_rights.export.delivered
+    sensitivity: 5
+    retention: permanent
+    note: An entire account's contents left the platform, at its owner's request.
+
+  - id: data_rights.deletion.requested
+    sensitivity: 4
+    retention: permanent
+
+  - id: data_rights.deletion.completed
+    sensitivity: 5
+    retention: permanent
+    note: >-
+      The evidence that a deletion actually happened must outlive everything it
+      deleted, or the platform cannot prove it complied.
+
+  - id: retention.expiry.purged
+    sensitivity: 2
+    retention: long_term
+
+  # --- staff and system ----------------------------------------------------
+  - id: staff.access.granted
+    sensitivity: 4
+    retention: long_term
+
+  - id: staff.bulk_access.flagged
+    sensitivity: 5
+    retention: permanent
+    note: Insider-threat signal (§12L). Never expires.
+
+  - id: system.key.rotated
+    sensitivity: 3
+    retention: permanent
+
+  - id: system.audit.sealed
+    sensitivity: 1
+    retention: permanent

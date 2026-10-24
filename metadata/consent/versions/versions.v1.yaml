@@ -1,0 +1,86 @@
+# Consent text.
+#
+# What a member is actually agreeing to, in the words they are shown. A consent record
+# points at one of these by id, which is what makes "what did they agree to?" a
+# question with an answer years later.
+#
+# VERSIONS ARE APPEND-ONLY
+#
+# Changing what a purpose means publishes a NEW id and supersedes the old one. It never
+# edits the text in place, because a member who agreed to version 2 did not agree to
+# version 5, and an edited row would erase the difference. Superseding does not
+# withdraw anybody's consent; it means the next person to be asked sees new words.
+#
+# HOW THESE ARE WRITTEN
+#
+# Short, second person, plain. Somebody deciding whether to let a platform hold their
+# worst night should be able to read this in under a minute. No defined terms, no
+# "including but not limited to", nothing that needs a second reading.
+#
+# Each says three things: what is processed, what is done with it, and what stopping
+# looks like. The third matters most and is usually the one missing.
+#
+# Validated by: metadata/schemas/consent-versions.schema.json
+
+version: 1
+
+versions:
+  - id: care-delivery-v1
+    purpose: care-delivery
+    body_markdown: |
+      **Your journal, mood check-ins and anything else you write privately.**
+
+      We store what you write so you can come back to it. It is encrypted with a key
+      that is unique to each entry, and the service that decides who may read it cannot
+      read it itself.
+
+      Nobody reads your journal. Not our staff, not a moderator, not another member.
+      A therapist sees it only if you are in care with them and you share it, and that
+      is a separate decision you make per record.
+
+      **If you stop:** your entries stay yours. You can still read them, export them
+      and delete them. What stops is new processing — we will not analyse, summarise
+      or draw anything from them.
+
+  - id: community-moderation-v1
+    purpose: community-moderation
+    body_markdown: |
+      **Replies you write to other people.**
+
+      Before a reply is published, a classifier running on our own machines reads it
+      and decides whether it may cause harm to the person it is addressed to. If it is
+      blocked, you are told, and you can appeal.
+
+      Your own posts are not moderated. You may say anything about your own life,
+      however bleak or angry, and nothing stands between you and saying it.
+
+      **If you stop:** you can read and post as before, but you cannot write replies to
+      other people. We are not willing to publish an unchecked reply into somebody
+      else's difficult week, and that is not a restriction we will trade away.
+
+  - id: crisis-triage-v1
+    purpose: crisis-triage
+    body_markdown: |
+      **Checking whether you might be in danger.**
+
+      A second classifier reads what you post and estimates whether you may be at risk.
+      It does not block anything, and it does not tell you what it found. If it flags
+      something you have published, a trained person looks at it and may reach out.
+
+      It does not read drafts. Nothing you type and then delete leaves any trace.
+
+      **If you stop:** we will not run this check. Your posts publish exactly as before.
+      Crisis resources and the safety plan stay available to you either way — those are
+      never conditional on anything.
+
+  - id: notification-delivery-v1
+    purpose: notification-delivery
+    body_markdown: |
+      **Telling you when something happens.**
+
+      When someone replies to you, or an appeal is decided, we send a notification. It
+      never contains what was written — only that something is waiting, so that a
+      glance at a lock screen in front of somebody else gives nothing away.
+
+      **If you stop:** nothing is sent. Everything is still waiting for you when you
+      next open the app.

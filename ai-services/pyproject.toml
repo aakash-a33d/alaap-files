@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alaap-ai"
+version = "0.1.0"
+description = "Alaap AI services — moderation, crisis triage, orchestration"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "pyyaml>=6.0",
+]
+
+# Note: torch and transformers stay out of the base install. The training
+# preflight, the dataset validator and the calibrator all run without them, which is
+# what lets CI check a dataset on a machine with no GPU.
+
+[project.optional-dependencies]
+# Model backends are optional so the pipeline, the API and the evaluation harness
+# all run — and CI stays green — without downloading a checkpoint.
+models = ["transformers>=4.40", "torch>=2.2"]
+dev = ["pytest>=8.0", "httpx>=0.27"]
+
+# The zone directories are hyphenated because they are service names, not Python
+# modules. Mapping them explicitly keeps the code where folder-structure.md says it
+# belongs while still importing as one package during the prototype.
+[tool.setuptools]
+packages = [
+    "alaap_ai",
+    "alaap_ai.shared",
+    "alaap_ai.shared.schemas",
+    "alaap_ai.shared.redaction",
+    "alaap_ai.shared.inference",
+    "alaap_ai.community_moderation",
+    "alaap_ai.community_moderation.config",
+    "alaap_ai.community_moderation.models",
+    "alaap_ai.community_moderation.pipelines",
+    "alaap_ai.community_moderation.training",
+    "alaap_ai.crisis_triage",
+    "alaap_ai.crisis_triage.models",
+    "alaap_ai.crisis_triage.training",
+    "alaap_ai.orchestrator",
+    "alaap_ai.supportive_response",
+    "alaap_ai.orchestrator.api",
+]
+
+[tool.setuptools.package-dir]
+"alaap_ai" = "alaap_ai"
+"alaap_ai.shared" = "shared/src"
+"alaap_ai.community_moderation" = "community-moderation/app"
+# training/ sits beside app/, not inside it, so it needs its own mapping. Keeping it
+# out of app/ means training code does not ship in the serving container.
+"alaap_ai.community_moderation.training" = "community-moderation/training"
+"alaap_ai.crisis_triage" = "crisis-triage/app"
+# Same split as community-moderation: training code sits beside app/ so it
+# does not ship in the serving container.
+"alaap_ai.crisis_triage.training" = "crisis-triage/training"
+"alaap_ai.orchestrator" = "orchestrator/app"
+"alaap_ai.supportive_response" = "supportive-response/app"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "shared/tests",
+    "community-moderation/tests",
+    "crisis-triage/tests",
+    "orchestrator/tests",
+]

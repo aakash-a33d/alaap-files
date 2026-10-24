@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alaap.platform/schemas/api-groups.schema.json",
+  "title": "API groups",
+  "description": "Validates metadata/api/api-groups/*.yaml — the gateway's route policy. The gateway builds its entire route table from this file and holds none in code. Cross-checked at boot against metadata/api/service-registry.v1.yaml: every prefix must be claimed by the service it names, and a service declaring api_groups: [] must not appear here at all.",
+  "type": "object",
+  "required": ["version", "defaults", "groups"],
+  "additionalProperties": false,
+
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+
+    "defaults": {
+      "type": "object",
+      "required": ["authentication", "audit", "step_up"],
+      "additionalProperties": false,
+      "properties": {
+        "authentication": { "$ref": "#/definitions/authentication" },
+        "audit": { "$ref": "#/definitions/audit" },
+        "step_up": { "type": "boolean" }
+      },
+      "description": "Applied to any group that omits the field. Defaults are deliberately the restrictive values so that forgetting a field cannot open a route."
+    },
+
+    "groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/group" }
+    }
+  },
+
+  "definitions": {
+    "authentication": {
+      "enum": ["required", "none"],
+      "description": "none is permitted only where a session cannot exist yet — registration, login, OTP, recovery."
+    },
+
+    "audit": {
+      "enum": ["none", "writes", "all"],
+      "description": "Gateway-level audit. none leaves auditing to the owning service at the point of vault access; writes covers POST/PUT/PATCH/DELETE; all covers reads too, for groups where the read is itself the sensitive act."
+    },
+
+    "role": {
+      "enum": ["user", "therapist", "moderator", "admin", "safety_reviewer", "partner"],
+      "description": "Matches the actor_role CHECK constraint on core.sessions."
+    },
+
+    "group": {
+      "type": "object",
+      "required": ["prefix", "service", "roles"],
+      "additionalProperties": false,
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "pattern": "^/api/[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "Must appear in the owning service's api_groups list in the service registry."
+        },
+        "service": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "authentication": { "$ref": "#/definitions/authentication" },
+        "roles": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/role" },
+          "description": "Empty only when authentication is none. A group reachable with a session but permitting no role is unreachable, and the gateway rejects that at boot rather than serving 403 forever."
+        },
+        "purpose": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "Must be a registered id in metadata/consent/purpose-registry/. Required whenever audit is not none, because audit_events.purpose is NOT NULL and references a registered purpose."
+        },
+        "audit": { "$ref": "#/definitions/audit" },
+        "step_up": {
+          "type": "boolean",
+          "description": "Requires a live step-up assertion on the session, scoped to this group. Step-up assertions expire sooner than the session (backend-requirements §5)."
+        },
+        "step_up_grant": {
+          "type": "boolean",
+          "description": "Responses from this group may stamp a step-up assertion onto the caller's session. Only where a second factor is actually verified. The gateway owns the session record, so a service cannot amend one itself; this names the one group whose verified answer it will act on, and the scope it grants is checked against the groups that require step-up."
+        },
+        "session_cookie": {
+          "type": "boolean",
+          "description": "The gateway issues the HttpOnly session cookie from this group's responses, and clears it when one revokes a session. Only where a session is minted. A downstream service cannot set a cookie on our origin — the proxy strips set-cookie — so this is the only way the browser is given a credential, and naming the group here keeps that to one place rather than a body sniff on every route."
+        },
+        "note": { "type": "string" }
+      },
+
+      "allOf": [
+        {
+          "if": {
+            "properties": { "audit": { "enum": ["writes", "all"] } },
+            "required": ["audit"]
+          },
+          "then": {
+            "required": ["purpose"],
+            "description": "An audited group must name the purpose it will record. audit_events.purpose is NOT NULL."
+          }
+        },
+        {
+          "if": {
+            "properties": { "authentication": { "const": "none" } },
+            "required": ["authentication"]
+          },
+          "then": {
+            "properties": {
+              "roles": { "maxItems": 0 },
+              "step_up": { "const": false },
+              "audit": { "const": "none" }
+            },
+            "description": "An unauthenticated group has no actor to authorise, to step up, or to attribute an audit event to."
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "properties": { "authentication": { "const": "none" } },
+              "required": ["authentication"]
+            }
+          },
+          "then": {
+            "properties": { "roles": { "minItems": 1 } },
+            "description": "An authenticated group must permit at least one role."
+          }
+        }
+      ]
+    }
+  }
+}

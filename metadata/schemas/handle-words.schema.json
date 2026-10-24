@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alaap.in/schemas/handle-words.schema.json",
+  "title": "Handle vocabulary",
+  "description": "The words every public handle is drawn from, and how handles are normalised for lookup. Loaded by pseudonym-service at startup; there is no second copy of these lists in code. Handles are permanent and always drawn — members cannot supply their own.",
+  "type": "object",
+  "required": ["version", "number_min", "number_max", "normalise", "adjectives", "nouns"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+
+    "number_min": { "type": "integer", "minimum": 1000 },
+    "number_max": {
+      "type": "integer",
+      "maximum": 999999,
+      "description": "Capped at six digits because HANDLE_PATTERN accepts \\d{4,6}. Widening past this makes every new handle fail validation."
+    },
+
+    "normalise": {
+      "type": "object",
+      "description": "Defines the uniqueness key and what account recovery matches on. A transcription aid: somebody typing their handle has usually copied it off paper, having lost their phone.",
+      "required": ["case_fold", "strip_separators", "separators", "confusables"],
+      "additionalProperties": false,
+      "properties": {
+        "case_fold": { "type": "boolean" },
+        "strip_separators": { "type": "boolean" },
+        "separators": { "type": "string", "minLength": 1, "maxLength": 8 },
+        "confusables": {
+          "type": "object",
+          "description": "Single character to single character. No target may also be a source, or normalisation is not idempotent and the unique index stops being a key. pseudonym-service verifies this at startup.",
+          "minProperties": 1,
+          "propertyNames": { "type": "string", "minLength": 1, "maxLength": 1 },
+          "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 1 }
+        }
+      }
+    },
+
+    "adjectives": { "$ref": "#/definitions/wordList" },
+    "nouns": { "$ref": "#/definitions/wordList" }
+  },
+
+  "definitions": {
+    "wordList": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 120,
+      "description": "Handles are permanent, so adjectives x nouns x numbers is a hard ceiling on total accounts, not a collision budget. pseudonym-service refuses to start if that product falls under 100,000,000; the minItems floor here is the schema-level half of the same guard. No word may appear in both lists.",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][a-z]{2,11}$",
+        "description": "Capitalised, letters only, 3-12 characters — anything else produces a handle that fails HANDLE_PATTERN. Nothing that reads as a mood, diagnosis, verdict, body, injury, religion, caste, politics or brand; see the header of handle-words.v1.yaml."
+      }
+    }
+  }
+}

@@ -1,0 +1,317 @@
+# API groups — the gateway's route policy
+#
+# One entry per API group in metadata/api/service-registry.v1.yaml. The gateway reads
+# this at boot and refuses to start if it disagrees with the service registry, so a
+# route cannot exist here for a service that does not claim it, or vice versa.
+#
+# This file is the gateway's whole routing brain. There is no route table in code.
+#
+# Reasoning: docs/backend/backend-requirements.md §9, backend/README.md
+# Validated by: metadata/schemas/api-groups.schema.json
+
+# ON `purpose` AND `audit`
+#
+# §9 splits the consent decision in two. The gateway makes the COARSE decision —
+# is this caller authenticated, does this role reach this group, is the declared
+# purpose registered and does it cover the vaults this group's service can touch.
+# The owning service makes the RECORD-LEVEL decision, and declares its own purpose
+# at the point it actually opens a vault.
+#
+# So the gateway audits only where it can honestly name a registered purpose for the
+# whole group. Where it cannot — reading your own consent dashboard, browsing the
+# feed, listing therapists — `audit: none` and the owning service writes the audit
+# event when it touches a vault. This is not a gap. An audit row per feed scroll
+# would bury the signal and bottleneck the hash chain (see the advisory-lock note in
+# database/migrations/audit-vault/0001_audit.sql) while recording nothing worth
+# reviewing.
+#
+#   audit: none    gateway writes no audit event; owning service audits vault access
+#   audit: writes  gateway audits POST, PUT, PATCH, DELETE
+#   audit: all     gateway audits every request, reads included
+#
+# `all` is reserved for groups where the READ is itself the sensitive act.
+
+# ON ABSENT GROUPS
+#
+# identity-vault-service and audit-service declare `api_groups: []` in the service
+# registry. They are internal-only and must never be reachable from the frontend.
+# They are absent here, and the gateway denies any path that resolves to a service
+# with no group — absence is denial, matching the vault access matrix convention.
+
+version: 1
+
+defaults:
+  authentication: required
+  audit: none
+  step_up: false
+
+groups:
+
+  # ---------------------------------------------------------------- auth ---
+  - prefix: /api/auth
+    service: auth-service
+    authentication: none
+    roles: []
+    audit: none
+    session_cookie: true
+    note: >-
+      Must be reachable unauthenticated — this is where a session comes from.
+      auth-service owns login_events and writes its own audit events; the gateway
+      has no session to attribute one to yet.
+
+      session_cookie: the browser must never hold the token in JavaScript. An opaque
+      session token is not a claim about who somebody is, it IS the session, so any
+      XSS that can read it takes over the account — and on this platform that means
+      somebody's journal. The gateway turns the minted token into an HttpOnly cookie
+      here and the browser client never sees it. The token stays in the response body
+      for the dev scripts and for a native client later.
+
+  - prefix: /api/passkeys
+    service: auth-service
+    roles: [user, therapist, moderator, admin, safety_reviewer, partner]
+    audit: none
+    note: >-
+      Enrolling a passkey requires an existing session, which is why this group is
+      authenticated while /api/auth is not. Passkey LOGIN lives under /api/auth,
+      because by definition there is no session yet.
+
+      auth-service writes auth.passkey.registered itself, at the point it knows which
+      account the credential attached to.
+
+  - prefix: /api/account
+    service: auth-service
+    roles: [user, therapist, moderator, admin, safety_reviewer, partner]
+    audit: none
+    step_up_grant: true
+    note: >-
+      Account self-management by somebody already signed in: recovery codes, trusted
+      devices, session revocation. Separate from /api/auth for the same reason
+      /api/passkeys is — /api/auth is where a session comes FROM and so cannot require
+      one, which means any route that does require one cannot live there. Putting an
+      authenticated route under an `authentication: none` prefix does not merely
+      weaken it; the gateway skips session resolution for that prefix, so the route
+      receives no caller at all and refuses everyone.
+      auth-service writes its own audit events here, at the point it knows the account.
+
+  - prefix: /api/pseudonym
+    service: pseudonym-service
+    roles: [user]
+    audit: none
+
+  # ----------------------------------------------------------- community ---
+  - prefix: /api/community
+    service: community-service
+    roles: [user]
+    purpose: community-moderation
+    audit: writes
+    note: >-
+      Writes are audited because publication is conditional on a moderation pass.
+      Reads are not: the community vault holds no identity by construction, and the
+      feed is pseudonymous content already visible to every member.
+
+      Plan quotas (posts and written replies per month) are NOT enforced here. The
+      gateway holds no billing credentials and cannot read a plan tier. Quota is
+      community-service's decision, from metadata/catalog/plans/.
+
+  - prefix: /api/ai
+    service: ai-orchestrator
+    roles: [user]
+    purpose: community-moderation
+    audit: writes
+    note: >-
+      The pre-send check. A member's client calls this while they are writing a reply,
+      and the verdict decides whether it may be published.
+
+      Separate from /api/moderation, which is moderation-service's and is about a
+      member's own reports and appeals. Those are records; this is a classifier, holds
+      nothing, and owns no table.
+
+      Only the PUBLIC projection is reachable here. The orchestrator's
+      /v1/moderate/internal returns scores, thresholds and model ids, and is bound to
+      the internal network — routed to a browser it would be a tuning oracle for
+      working out what gets past the filter.
+
+      Audited as a write because AI processing of a member's words is an event worth
+      being able to reconstruct, even though it reads no record. The verdict itself is
+      not recorded here; that belongs with moderation-service, which owns
+      moderation_verdicts and can tie a verdict to the post it acted on.
+
+  - prefix: /api/moderation
+    service: moderation-service
+    roles: [user]
+    purpose: community-moderation
+    audit: writes
+    note: A member's own reports and appeals.
+
+  - prefix: /api/moderator
+    service: moderation-service
+    roles: [moderator, admin]
+    purpose: community-moderation
+    audit: all
+    note: >-
+      Every moderator action is audited, reads included. Opening a queue item is
+      itself an access to another member's content and must leave a trace.
+
+  # ------------------------------------------------------------- consent ---
+  - prefix: /api/consent
+    service: consent-service
+    roles: [user]
+    audit: none
+    note: >-
+      A person managing their own consent. consent-service audits the grant and
+      withdrawal records themselves; no registered purpose covers "showing you your
+      own dashboard", and inventing one to satisfy this file would be worse than
+      leaving the audit to the service that has the record in hand.
+
+  - prefix: /api/privacy
+    service: consent-service
+    roles: [user]
+    audit: none
+
+  # ------------------------------------------------------------ clinical ---
+  - prefix: /api/journal
+    service: clinical-vault-service
+    roles: [user]
+    audit: none
+    note: >-
+      Deliberately not audited at the gateway. Every journal access is audited by
+      clinical-vault-service at the point of decrypt, with the record id and consent
+      decision the gateway cannot see. A second, vaguer event here would add volume
+      without adding information.
+
+      The journal is a PAID surface (metadata/catalog/plans/) and the gateway does
+      not enforce that. It cannot: entitlement needs a plan tier, and the gateway
+      holds no billing credentials. A free-plan caller reaches clinical-vault-service
+      and is refused there, with the quota and the upgrade path the gateway does not
+      know about. Enforcing it here would mean giving the gateway a billing read it
+      has no other reason to hold.
+
+  - prefix: /api/mood
+    service: clinical-vault-service
+    roles: [user]
+    audit: none
+    note: >-
+      Free on every plan. A mood check-in is a single number whose cost is
+      indistinguishable from zero, and it is the lowest-friction way for someone to
+      start engaging at all.
+
+  - prefix: /api/stories
+    service: clinical-vault-service
+    roles: [user]
+    audit: none
+    note: >-
+      Short stories. A private long-form writing surface in the clinical vault, under
+      the same per-record consent rules as the journal, and paid for the same reason.
+
+      Sharing a story to the community is a separate, explicit action that publishes
+      a COPY into the community vault through /api/community, where it is moderated
+      like any other post. The original never leaves the clinical vault, so a shared
+      story does not drag its private drafts along with it.
+
+  # ---------------------------------------------------------------- care ---
+  - prefix: /api/therapy
+    service: care-therapy-service
+    roles: [user, therapist]
+    purpose: care-delivery
+    audit: writes
+
+  - prefix: /api/groups
+    service: care-therapy-service
+    roles: [user, therapist]
+    purpose: care-delivery
+    audit: writes
+
+  - prefix: /api/appointments
+    service: care-therapy-service
+    roles: [user, therapist]
+    purpose: care-delivery
+    audit: writes
+
+  - prefix: /api/therapists
+    service: therapist-service
+    roles: [user, therapist, admin]
+    audit: none
+    note: Public directory and a therapist's own profile. No protected data at this edge.
+
+  # ------------------------------------------------------------- billing ---
+  - prefix: /api/plans
+    service: billing-subsidy-service
+    roles: [user]
+    audit: none
+    note: The plan catalogue. Public pricing, no personal data.
+
+  - prefix: /api/billing
+    service: billing-subsidy-service
+    roles: [user]
+    purpose: billing-subscription
+    audit: writes
+
+  - prefix: /api/subsidies
+    service: billing-subsidy-service
+    roles: [user, partner]
+    purpose: subsidy-eligibility
+    audit: writes
+
+  # -------------------------------------------------------------- safety ---
+  - prefix: /api/safety
+    service: safety-crisis-service
+    roles: [user, safety_reviewer]
+    purpose: crisis-triage
+    audit: all
+    note: >-
+      Audited on reads too. A safety reviewer opening a risk signal is a sensitive
+      access whether or not they change anything.
+
+  - prefix: /api/break-glass
+    service: break-glass-service
+    roles: [safety_reviewer, admin]
+    purpose: emergency-contact-disclosure
+    audit: all
+    step_up: true
+    note: >-
+      The most sensitive group on the platform. Step-up assertion required on every
+      request; the case, the two approvals and the threshold shares are checked by
+      break-glass-service, not here.
+
+  # --------------------------------------------------------------- other ---
+  - prefix: /api/notifications
+    service: notification-service
+    roles: [user]
+    audit: none
+
+  - prefix: /api/data-rights
+    service: retention-service
+    roles: [user]
+    purpose: data-export
+    audit: all
+    step_up: true
+    note: >-
+      Export and deletion both. Step-up because §12M lists exporting data and
+      deleting records as sensitive actions, and because a stolen session must not be
+      able to exfiltrate or destroy an account's history.
+
+  - prefix: /api/admin
+    service: admin-service
+    roles: [admin]
+    purpose: audit-review
+    audit: all
+    step_up: true
+
+  - prefix: /api/partner
+    service: partner-service
+    roles: [partner]
+    audit: none
+    note: >-
+      Not audited at the gateway, and the reason is worth stating because the
+      instinct runs the other way — a partner is an external organisation, so
+      logging everything they see looks obviously right.
+
+      But `audit_events.purpose` must name the reason a PERSON's data is being
+      touched, and a partner touches none. Fund balance, utilisation and outcome
+      counts are de-identified by construction before partner-service ever assembles
+      them. No purpose in the registry fits, and inventing one to justify a row here
+      would put a false reason in the one store that is never deleted.
+
+      The sensitive act is the de-identification itself, and partner-service audits
+      that where it happens — with the aggregate definition and the k-anonymity
+      threshold the gateway cannot see.

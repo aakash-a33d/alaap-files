@@ -1,0 +1,100 @@
+# Moderation categories and their severity.
+#
+# The sixteen things a REPLY may not do. Not the same list as
+# metadata/community/categories.v1.yaml, which is what a POST is about and is chosen by
+# the member — these are chosen by the classifier and by moderators.
+#
+# The ids are the canonical A1 labels and must stay exactly in step with the `Category`
+# enum in ai-services/shared/src/schemas/moderation.py. A verdict names the category
+# that fired, so an id that differs by a character produces a verdict nobody can join
+# to anything. moderation-service checks the two lists match at startup.
+#
+# SEVERITY (1-5) drives review priority and how long a restriction lasts. It is NOT the
+# threshold — that lives in thresholds.v10.yaml, calibrated per model version. A
+# category can be severe and switched off at the same time, and several here are.
+#
+#   5  reaches past the platform, or targets somebody who cannot protect themselves
+#   4  serious harm to the person addressed
+#   3  harm that accumulates rather than lands at once
+#   2  corrosive to the place more than to a person
+#   1  unwanted, not dangerous
+#
+# Validated by: metadata/schemas/moderation-categories.schema.json
+
+version: 1
+
+categories:
+  # --- reaches past the platform ------------------------------------------
+  - id: self_harm_encouragement
+    severity: 5
+    note: >-
+      The one that matters most here and works least. No trained detector; a lexical
+      rule stands in for it. See docs/ai/context-pair-datasets.md.
+
+  - id: grooming_exploitation
+    severity: 5
+    note: >-
+      Enforcement is OFF in policy.py — it scores 0.99 on "how was your weekend?" and
+      would refuse a person disclosing distress while labelling them predatory.
+
+  - id: sexual_exploitation
+    severity: 5
+    note: >-
+      Enforcement is OFF in policy.py. Not because it misfires — because it has no
+      training data at all. The corpus holds zero examples, so the head is untrained and
+      whatever it emits is noise; a severity-5 block decided by noise is worse than no
+      check. The score still travels in the verdict for measurement. Re-enable when a
+      corpus and a probe set exist, not before.
+
+  - id: stalking_doxxing
+    severity: 5
+    note: Publishing identifying information. Visible in the reply itself, not relational.
+
+  # --- serious harm to the person addressed --------------------------------
+  - id: threats_intimidation
+    severity: 4
+
+  - id: manipulation_coercion
+    severity: 4
+
+  - id: hate_speech
+    severity: 4
+
+  - id: unsafe_medical_advice
+    severity: 4
+    note: >-
+      Trained but not enforced: it has scored 1.00/1.00 while broken four times, each
+      on a different shortcut in the generated corpus.
+
+  # --- harm that accumulates ------------------------------------------------
+  - id: bullying_harassment
+    severity: 3
+
+  - id: help_seeking_discouragement
+    severity: 3
+    note: >-
+      Telling somebody not to get help. On this platform that is close to the top of
+      the list by consequence, even though a single instance reads as mild.
+
+  - id: emotional_dependency_pressure
+    severity: 3
+
+  - id: religious_coercion
+    severity: 3
+
+  - id: impersonation
+    severity: 3
+
+  # --- corrosive to the place ----------------------------------------------
+  - id: scams_financial_exploitation
+    severity: 2
+
+  - id: malware_phishing
+    severity: 2
+
+  - id: passive_aggressive_abuse
+    severity: 2
+    note: >-
+      Enforced in English only. Language-scoped in policy.py because it does not
+      measure acceptably elsewhere, and enforcing an unmeasured category produces
+      false positives against exactly the people this platform is for.

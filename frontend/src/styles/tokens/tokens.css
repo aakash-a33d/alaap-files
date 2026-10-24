@@ -1,0 +1,237 @@
+/* ============================================================================
+   UNSAID — DESIGN TOKENS
+   Three-layer architecture: primitive -> semantic -> component.
+   Never reference a primitive directly in a component; go through semantic.
+
+   The page runs two themes. The hero is dark, because the film is dark and
+   the footage should hit. Everything below it is light, because people read
+   pricing and privacy policy in daylight, not in a cinema.
+
+   Semantic names never say "dark" or "light" — they say `surface`, `on-surface`.
+   A section declares `.theme-dark` or `.theme-light` and every component
+   inside it re-points automatically.
+   ========================================================================= */
+
+:root {
+  /* ---------- LAYER 1: PRIMITIVES ------------------------------------- */
+
+  /* Ink — the studio dark the film opens in */
+  --ink-950: #060505;
+  --ink-900: #0b0908;
+  --ink-850: #100d0b;
+  --ink-800: #16120f;
+  --ink-700: #211b16;
+  --ink-600: #2e251d;
+
+  /* Paper — the light body */
+  --paper-50: #fcfbf8;
+  --paper-100: #f5f3ed;
+  --paper-200: #ebe7dd;
+  --paper-300: #ddd7c9;
+
+  /* Clay — warm mid-tones, shared by both themes */
+  --clay-700: #3a2e24;
+  --clay-600: #4a3a2c;
+  --clay-500: #5e4a38;
+  --clay-400: #7a6249;
+  --clay-300: #9a8574;
+
+  /* Stone — text greys */
+  --stone-700: #4a443c;
+  --stone-600: #635c52;
+  --stone-500: #7c7367;
+  --stone-400: #8c8378;
+  --stone-300: #a79c8e;
+  --stone-200: #c7beb1;
+
+  --parchment-100: #ede7dc;
+  --parchment-50: #f7f3eb;
+
+  /* Gold — the seam. One loud thing, used with discipline. */
+  --gold-800: #7d5518;
+  --gold-700: #a9762a;
+  --gold-600: #c9973e;
+  --gold-500: #e4b155;
+  --gold-400: #f0c878;
+  --gold-300: #f7dfae;
+
+  --ember-500: #d9743f;
+  --ember-700: #a8481c;
+  --sage-700: #46604c;
+  --sage-600: #5f7c62;
+  --sage-500: #7d9a80;
+  --sage-400: #9bb59d;
+
+  /* Spacing — 4px base */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* Radius — the references are soft everywhere; nothing is sharp */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-full: 9999px;
+
+  /* Motion */
+  --duration-fast: 150ms;
+  --duration-normal: 240ms;
+  --duration-slow: 420ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Z-index scale */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-nav: 200;
+  --z-modal: 400;
+  --z-toast: 500;
+
+  --spacing-section: clamp(4.5rem, 8vw, 8rem);
+  --spacing-gutter: clamp(1.1rem, 3.5vw, 2.5rem);
+  --measure: 62ch;
+  --shell-max: 88rem;
+}
+
+/* ---------- LAYER 2: SEMANTIC — light (the page default) --------------- */
+
+:root,
+.theme-light {
+  --surface: var(--paper-50);
+  --surface-sunken: var(--paper-100);
+  --surface-raised: #ffffff;
+  --surface-contrast: var(--ink-900);
+
+  --on-surface: #14120f;
+  --on-surface-muted: var(--stone-700);
+  --on-surface-faint: var(--stone-500);
+  --on-contrast: var(--parchment-50);
+
+  --border: rgb(20 18 15 / 0.10);
+  --border-strong: rgb(20 18 15 / 0.18);
+  --border-seam: rgb(169 118 42 / 0.34);
+
+  /* On paper, gold has to darken to stay legible as text. */
+  --accent: var(--gold-700);
+  --accent-bright: var(--gold-600);
+  --accent-fill: var(--gold-500);
+  --accent-wash: rgb(228 177 85 / 0.14);
+
+  --safe: var(--sage-700);
+  --caution: var(--ember-700);
+
+  --btn-primary-bg: var(--ink-900);
+  --btn-primary-fg: var(--parchment-50);
+  --btn-primary-bg-hover: var(--ink-700);
+  --btn-ghost-fg: var(--on-surface);
+  --btn-ghost-border: var(--border-strong);
+
+  --card-bg: var(--surface-raised);
+  --card-border: var(--border);
+  --shadow-card: 0 1px 2px rgb(20 18 15 / 0.04), 0 8px 24px -12px rgb(20 18 15 / 0.10);
+  --shadow-lift: 0 2px 4px rgb(20 18 15 / 0.05), 0 18px 44px -16px rgb(20 18 15 / 0.18);
+
+  --chip-bg: rgb(20 18 15 / 0.045);
+  --chip-border: var(--border);
+  --chip-fg: var(--on-surface-muted);
+
+  /* Tailwind-facing aliases. These must be redeclared in every theme scope:
+     a `--color-ink: var(--on-surface)` alias declared once on :root is
+     substituted there and will not re-resolve inside .theme-dark. */
+  --color-surface: var(--paper-50);
+  --color-sunken: var(--paper-100);
+  --color-raised: #ffffff;
+  --color-contrast: var(--ink-900);
+  --color-ink: #14120f;
+  --color-muted: var(--stone-700);
+  --color-faint: var(--stone-500);
+  --color-oncontrast: var(--parchment-50);
+  --color-accent: var(--gold-700);
+  --color-accent-bright: var(--gold-600);
+  --color-safe: var(--sage-700);
+  --color-caution: var(--ember-700);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+}
+
+/* ---------- LAYER 2: SEMANTIC — dark (hero, footer, feature bands) ----- */
+
+.theme-dark {
+  --surface: var(--ink-900);
+  --surface-sunken: var(--ink-950);
+  --surface-raised: var(--ink-800);
+  --surface-contrast: var(--parchment-50);
+
+  --on-surface: var(--parchment-100);
+  --on-surface-muted: var(--stone-300);
+  --on-surface-faint: var(--stone-400);
+  --on-contrast: var(--ink-900);
+
+  --border: rgb(237 231 220 / 0.12);
+  --border-strong: rgb(237 231 220 / 0.22);
+  --border-seam: rgb(228 177 85 / 0.34);
+
+  --accent: var(--gold-500);
+  --accent-bright: var(--gold-300);
+  --accent-fill: var(--gold-500);
+  --accent-wash: rgb(228 177 85 / 0.12);
+
+  --safe: var(--sage-400);
+  --caution: var(--ember-500);
+
+  /* On the film, the primary button inverts to a white pill — the pattern
+     every reference uses over a photographic hero. */
+  --btn-primary-bg: var(--parchment-50);
+  --btn-primary-fg: var(--ink-900);
+  --btn-primary-bg-hover: #ffffff;
+  --btn-ghost-fg: var(--on-surface);
+  --btn-ghost-border: var(--border-strong);
+
+  --card-bg: rgb(22 18 15 / 0.66);
+  --card-border: var(--border);
+  --shadow-card: none;
+  --shadow-lift: 0 24px 60px -24px rgb(0 0 0 / 0.7);
+
+  --chip-bg: rgb(237 231 220 / 0.08);
+  --chip-border: var(--border);
+  --chip-fg: var(--on-surface-muted);
+
+  --color-surface: var(--ink-900);
+  --color-sunken: var(--ink-950);
+  --color-raised: var(--ink-800);
+  --color-contrast: var(--parchment-50);
+  --color-ink: var(--parchment-100);
+  --color-muted: var(--stone-300);
+  --color-faint: var(--stone-400);
+  --color-oncontrast: var(--ink-900);
+  --color-accent: var(--gold-500);
+  --color-accent-bright: var(--gold-300);
+  --color-safe: var(--sage-400);
+  --color-caution: var(--ember-500);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+}
+
+/* ---------- LAYER 3: COMPONENT ---------------------------------------- */
+
+:root {
+  --btn-radius: var(--radius-full);
+  --btn-height: 48px;
+
+  --card-radius: var(--radius-xl);
+  --card-padding: clamp(1.25rem, 2.2vw, 1.85rem);
+
+  --panel-radius: var(--radius-2xl);
+
+  --seam-width: 1.5px;
+}

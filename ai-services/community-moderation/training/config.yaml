@@ -1,0 +1,176 @@
+# A1 safety classifier — training and calibration config.
+#
+# The per-category block is the interesting part. A single global threshold is wrong
+# for multi-label safety work: the categories carry very different costs when the
+# model is wrong, so they cannot share an operating point.
+#
+#   beta           F-beta weighting. >1 favours recall, <1 favours precision.
+#   min_precision  hard floor. Calibration will not select a threshold below it,
+#                  however much recall it would buy.
+#   action         what the pipeline does when the category fires.
+#
+# NOTE ON THE REWORD TIER: enforcement depends on the surface.
+#
+#   new post   advisory. The author describes their own experience; it may be bleak,
+#              angry or bitter, and none of that is a reason to stop them saying it.
+#              The suggestion can be declined.
+#   reply, DM  mandatory. The message is aimed at another person, usually one in
+#              distress, and does not land until it changes.
+#
+# The floors were originally 0.50-0.55, justified by "a false positive costs the
+# author one edit". That reasoning does not survive the reply gate: there a false
+# positive stops a supportive message from reaching someone who needed it, and the
+# responder may simply give up rather than argue with a model. On the free tier the
+# author sees only two replies, so each one suppressed in error costs proportionally
+# more.
+#
+# One threshold serves both surfaces, so the stricter surface sets the floor. These
+# sit just under block tier. The remaining difference between the tiers is that a
+# reword is recoverable by the author without waiting for a human.
+
+model:
+  base: google/muril-large-cased
+  # Full fine-tune, not LoRA. At 506M parameters the optimiser states fit in 16 GB
+  # under bf16, and a fully tuned encoder beats an adapter on classification. LoRA
+  # is the right tool for the 8B generative base, not for this.
+  strategy: full
+  problem_type: multi_label_classification
+  max_length: 256
+
+training:
+  # Epoch 1 has been the selected checkpoint in both runs to date. The a1-v2 run
+  # additionally diverged during epoch 2, so the later epochs have never yet
+  # produced anything `load_best_model_at_end` chose to keep.
+  epochs: 3
+  batch_size: 16
+  gradient_accumulation_steps: 2   # effective batch 32
+  # Lowered from 2.0e-5 after the a1-v2 run diverged at epoch 1.49: gradient norm
+  # cascaded 7.8 -> 104 -> 999 -> 1.3e4 -> 8.6e4 over ~125 steps, training loss
+  # climbed 0.39 -> 2.86, and the model settled into a degenerate constant
+  # predictor it never left (epochs 3 and 4 reported identical metrics).
+  #
+  # 2.0e-5 is a BERT-base learning rate. MuRIL-large is 506M parameters, where
+  # 1.0e-5 is the conventional ceiling, and the rare-positive spikes described
+  # under pos_weight_cap leave no headroom above it.
+  learning_rate: 1.0e-5
+  warmup_ratio: 0.1
+  # Explicit rather than inherited. This was silently taking the Trainer default
+  # of 1.0, which held the *update* bounded but did not prevent the divergence
+  # above — the loss rose over ~125 steps, so the problem was the step size the
+  # clipped direction was applied with, not one unclipped batch.
+  max_grad_norm: 0.5
+  weight_decay: 0.01
+  bf16: true
+  gradient_checkpointing: false
+  seed: 20260831
+  # Selection metric. Deliberately not macro-F1: a checkpoint that improves average
+  # F1 while regressing recall on block-tier categories is not a better model.
+  select_on: block_tier_recall
+  pos_weight_cap: 20.0
+
+calibration:
+  # Threshold sweep granularity over the validation split.
+  step: 0.01
+  min_positive_examples: 20   # below this, fall back to the default and warn
+
+categories:
+  self_harm_encouragement:
+    action: block
+    beta: 2.0
+    min_precision: 0.85
+    note: Missing this is the most severe failure in the category set.
+
+  grooming_exploitation:
+    action: block
+    beta: 2.0
+    min_precision: 0.85
+
+  sexual_exploitation:
+    action: block
+    beta: 2.0
+    min_precision: 0.85
+
+  stalking_doxxing:
+    action: block
+    beta: 2.0
+    min_precision: 0.85
+
+  unsafe_medical_advice:
+    action: block
+    beta: 2.0
+    min_precision: 0.80
+    note: >-
+      Advice to stop medication can cause harm within days. Recall is weighted
+      heavily and the precision floor is the lowest of the block tier.
+
+  threats_intimidation:
+    action: block
+    beta: 1.5
+    min_precision: 0.85
+
+  hate_speech:
+    action: block
+    beta: 1.5
+    min_precision: 0.85
+
+  scams_financial_exploitation:
+    action: block
+    beta: 1.5
+    min_precision: 0.85
+
+  malware_phishing:
+    action: block
+    beta: 1.5
+    min_precision: 0.90
+    note: URL reputation checks run alongside, so the model can afford precision.
+
+  bullying_harassment:
+    action: block
+    beta: 1.0
+    min_precision: 0.88
+    note: >-
+      The only block-tier category weighted toward precision. Direct insults are
+      unambiguous when present, and blocking is a heavy remedy to apply on a guess.
+
+  impersonation:
+    action: review
+    beta: 1.5
+    min_precision: 0.60
+
+  religious_coercion:
+    action: review
+    beta: 1.5
+    min_precision: 0.60
+
+  emotional_dependency_pressure:
+    action: review
+    beta: 1.5
+    min_precision: 0.55
+    note: Subtle and context-dependent; a human makes the call, so recall is cheap.
+
+  manipulation_coercion:
+    action: reword
+    beta: 1.0
+    min_precision: 0.75
+
+  passive_aggressive_abuse:
+    action: reword
+    beta: 1.0
+    min_precision: 0.75
+    note: >-
+      The hardest category to score and the one most likely to misfire on ordinary
+      bluntness. Under a mandatory gate that misfire silences someone, so beta is
+      balanced rather than recall-weighted and the floor is close to block tier.
+
+  help_seeking_discouragement:
+    action: reword
+    beta: 1.0
+    min_precision: 0.75
+    note: >-
+      Not in architecture §6.1. Added because that list inherited its shape from
+      generic toxicity work and has no label for telling someone in a mental
+      wellness community to stop sharing — which attacks the platform's core
+      protective function and is among its most product-specific harms.
+      Reword rather than block: most people writing this believe they are giving
+      reasonable advice, and a rewrite prompt teaches the norm where a refusal
+      only ends the conversation.

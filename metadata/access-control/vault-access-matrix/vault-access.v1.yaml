@@ -1,0 +1,246 @@
+# Vault access matrix
+#
+# Enforced by tools/privacy-lint (folder-structure rule 1). A service with no entry
+# here gets no vault access — absence is denial, never default-allow.
+#
+# Two columns, because they answer different questions:
+#
+#   direct     Database-level access. What connection credentials the service holds.
+#              A vault may have more than one direct holder, but only over disjoint
+#              table sets — every table has exactly one owning service, declared in
+#              metadata/api/service-registry.v1.yaml, and a service reaching a table
+#              it does not own goes through that table's owner over the network.
+#              privacy-lint enforces this column.
+#
+#   effective  What the service can ultimately obtain, through APIs, subject to
+#              consent and purpose checks. Documents intent and bounds review.
+#
+# Reasoning: docs/backend/backend-requirements.md
+# Validated by: metadata/schemas/vault-access-matrix.schema.json
+
+# The `core` database (auth_accounts, passkey_credentials, sessions, recovery_codes,
+# trusted_devices, login_events) is deliberately NOT in this matrix. It holds
+# credentials and session state, not one of the five protected data domains of §12B,
+# and mixing it in would dilute what the matrix exists to prevent. Only auth-service
+# holds credentials to it; that constraint is enforced in
+# database/policies/roles-grants/ rather than here.
+
+version: 1
+vaults: [identity, community, clinical, billing, audit]
+
+services:
+
+  - service: gateway
+    deployable: core
+    access:
+      identity:  { direct: none, effective: none }
+      community: { direct: none, effective: none }
+      clinical:  { direct: none, effective: none }
+      billing:   { direct: none, effective: none }
+      audit:     { direct: append, effective: none }
+    note: >-
+      Routes and minimises. Holds no vault credentials beyond audit append, so a
+      gateway compromise yields no protected data directly.
+
+  - service: auth-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: limited, constraint: verified-mobile-only }
+      community: { direct: none, effective: none }
+      clinical:  { direct: none, effective: none }
+      billing:   { direct: none, effective: none }
+      audit:     { direct: append, effective: none }
+    depends_on: [identity-vault-service]
+
+  - service: pseudonym-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: none }
+      community: { direct: read-write, effective: full, constraint: pseudonym-tables-only }
+      clinical:  { direct: none, effective: none }
+      billing:   { direct: none, effective: none }
+      audit:     { direct: append, effective: none }
+    note: >-
+      Owns the pseudonym side of the identity split and must never be able to resolve
+      a pseudo ID to a real person.
+
+  - service: identity-vault-service
+    deployable: identity-isolate
+    access:
+      identity:  { direct: read-write, effective: full }
+      community: { direct: none, effective: none }
+      clinical:  { direct: none, effective: none }
+      billing:   { direct: none, effective: none }
+      audit:     { direct: append, effective: none }
+    note: >-
+      Sole owner of identity vault credentials. Initiates no outbound calls except
+      audit writes.
+
+  - service: community-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: none }
+      community: { direct: read-write, effective: full }
+      clinical:  { direct: none, effective: none }
+      billing:   { direct: none, effective: limited, constraint: plan-tier-only }
+      audit:     { direct: append, effective: none }
+    depends_on: [billing-subsidy-service, moderation-service]
+    note: >-
+      Reads plan tier only, to enforce hidden-reply limits. Never payment detail.
+
+  - service: moderation-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: none }
+      community: { direct: read-write, effective: full, constraint: content-and-verdicts-only }
+      clinical:  { direct: none, effective: none }
+      billing:   { direct: none, effective: none }
+      audit:     { direct: append, effective: none }
+
+  - service: consent-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: none }
+      community: { direct: none, effective: none }
+      clinical:  { direct: read-write, effective: full, constraint: consent-tables-only }
+      billing:   { direct: none, effective: none }
+      audit:     { direct: append, effective: none }
+    note: >-
+      Identity-level consent records live with identity-vault-service, not here.
+
+  - service: clinical-vault-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: none }
+      community: { direct: none, effective: none }
+      clinical:  { direct: read-write, effective: full }
+      billing:   { direct: none, effective: none }
+      audit:     { direct: append, effective: none }
+    depends_on: [consent-service]
+    note: >-
+      Maximum Privacy Mode records are stored ciphertext-only. This service cannot
+      decrypt them and must never be asked to.
+
+  - service: care-therapy-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: limited, constraint: care-verification-status-only }
+      community: { direct: none, effective: none }
+      clinical:  { direct: none, effective: consent-based }
+      billing:   { direct: none, effective: limited, constraint: plan-and-entitlement-only }
+      audit:     { direct: append, effective: none }
+    depends_on: [clinical-vault-service, consent-service, billing-subsidy-service]
+
+  - service: therapist-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: none }
+      community: { direct: none, effective: none }
+      clinical:  { direct: none, effective: consent-based, constraint: assigned-patients-only }
+      billing:   { direct: none, effective: limited, constraint: own-payouts-only }
+      audit:     { direct: append, effective: none }
+    depends_on: [clinical-vault-service, consent-service]
+    note: >-
+      A therapist reaches clinical data only through an active care relationship plus
+      a record-level consent grant. Both are checked in this service, not the gateway.
+
+  - service: billing-subsidy-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: limited, constraint: subsidy-eligibility-only }
+      community: { direct: none, effective: none }
+      clinical:  { direct: none, effective: none }
+      billing:   { direct: read-write, effective: full }
+      audit:     { direct: append, effective: none }
+    note: >-
+      Stores gateway token references only. No card data on our infrastructure.
+
+  - service: safety-crisis-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: approved-only, constraint: via-break-glass-case-only }
+      community: { direct: none, effective: limited, constraint: risk-signal-only }
+      clinical:  { direct: none, effective: consent-based, constraint: safety-plan-only }
+      billing:   { direct: none, effective: none }
+      audit:     { direct: append, effective: none }
+    depends_on: [break-glass-service]
+    note: >-
+      Classifies risk and opens cases. Cannot itself reach identity — that requires an
+      approved break-glass case.
+
+  - service: break-glass-service
+    deployable: identity-isolate
+    access:
+      identity:  { direct: read, effective: approved-only, constraint: approved-case-minimum-necessary }
+      community: { direct: none, effective: none }
+      clinical:  { direct: none, effective: approved-only, constraint: safety-plan-and-assigned-therapist-only }
+      billing:   { direct: none, effective: none }
+      audit:     { direct: append, effective: none }
+    note: >-
+      Requires a valid high-risk case, two human approvals, threshold key shares, a
+      reason code and a time-limited window. Releases minimum necessary fields only.
+
+  - service: notification-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: limited, constraint: delivery-address-only }
+      community: { direct: none, effective: none }
+      clinical:  { direct: none, effective: none }
+      billing:   { direct: none, effective: none }
+      audit:     { direct: append, effective: none }
+    depends_on: [identity-vault-service]
+    note: >-
+      Receives a delivery address and a template id. Never message content derived from
+      clinical or community records.
+
+  - service: audit-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: none }
+      community: { direct: none, effective: none }
+      clinical:  { direct: none, effective: none }
+      billing:   { direct: none, effective: none }
+      audit:     { direct: read-write, effective: full }
+    note: >-
+      Owns the vault. The application role used by every other service is INSERT-only;
+      this service holds the read path for review and sealing.
+
+  - service: retention-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: limited, constraint: purge-only }
+      community: { direct: none, effective: limited, constraint: purge-only }
+      clinical:  { direct: none, effective: limited, constraint: purge-only }
+      billing:   { direct: none, effective: limited, constraint: purge-only }
+      audit:     { direct: append, effective: none }
+    depends_on:
+      [identity-vault-service, community-service, clinical-vault-service, billing-subsidy-service]
+    note: >-
+      Deletes through each owning service's purge endpoint, never by direct database
+      access. Driven from the Postgres outbox so a request survives Redis loss.
+
+  - service: admin-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: masked }
+      community: { direct: none, effective: limited, constraint: moderation-oversight-only }
+      clinical:  { direct: none, effective: none }
+      billing:   { direct: none, effective: limited, constraint: plan-and-subsidy-config-only }
+      audit:     { direct: append, effective: limited, constraint: read-only-review }
+    note: >-
+      No casual access to identity, journals, therapy content or emergency contacts.
+      Sensitive admin actions require passkey re-verification, a reason code and a
+      time-limited window. Writes its own audit events like every other service — an
+      administrator cannot act unlogged.
+
+  - service: partner-service
+    deployable: core
+    access:
+      identity:  { direct: none, effective: none }
+      community: { direct: none, effective: none }
+      clinical:  { direct: none, effective: none }
+      billing:   { direct: none, effective: limited, constraint: deidentified-aggregates-only }
+      audit:     { direct: append, effective: none }
+    note: >-
+      Partners see fund balance, utilisation and de-identified outcomes. Never a
+      beneficiary's identity, posts, journals or therapy records.

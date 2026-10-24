@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alaap.platform/schemas/purpose-registry.schema.json",
+  "title": "Purpose registry",
+  "description": "Validates metadata/consent/purpose-registry/*.yaml. Every handler that reads protected data declares a purpose id from this registry; CI rejects unregistered purposes, and the consent engine evaluates the declared purpose against each record's consent scope.",
+  "type": "object",
+  "required": ["version", "purposes"],
+  "additionalProperties": false,
+
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "purposes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/purpose" }
+    }
+  },
+
+  "definitions": {
+    "purpose": {
+      "type": "object",
+      "required": ["id", "label", "vaults", "consent", "basis", "ai_permitted"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "Immutable once published — audit records reference the purpose a request declared."
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Written for the person whose data it is. This string is shown in the consent dashboard, so it must read as a reason, not as a system description."
+        },
+        "vaults": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["identity", "community", "clinical", "billing", "audit"] }
+        },
+        "consent": {
+          "description": "explicit requires an affirmative, withdrawable grant. implied-by-service is covered by using the service at all. not-required covers safety, legal and contractual processing. override proceeds against stated preference and is reserved for vital-interest cases.",
+          "enum": ["explicit", "implied-by-service", "not-required", "override"]
+        },
+        "basis": {
+          "enum": [
+            "consent",
+            "contract",
+            "legal-obligation",
+            "vital-interest",
+            "legitimate-safety",
+            "data-subject-right"
+          ]
+        },
+        "ai_permitted": {
+          "type": "boolean",
+          "description": "Whether the AI tier may process data under this purpose. False means no model in any zone may receive it."
+        },
+        "withdrawable": { "type": "boolean" },
+        "note": { "type": "string" }
+      },
+
+      "allOf": [
+        {
+          "if": { "properties": { "consent": { "const": "explicit" } }, "required": ["consent"] },
+          "then": {
+            "required": ["withdrawable"],
+            "description": "An explicit consent must state whether it can be withdrawn."
+          }
+        },
+        {
+          "if": { "properties": { "consent": { "const": "override" } }, "required": ["consent"] },
+          "then": {
+            "required": ["note"],
+            "properties": { "basis": { "const": "vital-interest" } },
+            "description": "Overriding a user's stated preference is permitted only on vital-interest grounds, and the conditions must be written down."
+          }
+        }
+      ]
+    }
+  }
+}

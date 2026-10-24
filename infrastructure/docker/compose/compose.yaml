@@ -1,0 +1,196 @@
+# Local development stack.
+#
+# NOT a production environment. Production needs replicated managed PostgreSQL,
+# separate encrypted object storage, a managed KMS/HSM, container orchestration,
+# CDN/WAF, SIEM and a backup region (infrastructure/README.md).
+#
+# THREE POSTGRES INSTANCES, NOT ONE WITH FOUR DATABASES.
+#
+# backend-requirements §2 puts Identity and Audit on dedicated instances and lets
+# core, Community, Clinical and Billing share a third. Locally it would be simpler to
+# run one cluster with six databases, and that is exactly why we do not: the rule
+# "no cross-database joins, cross-vault reads go through the owning service's API"
+# is only structurally true if a join is impossible. On one cluster it is merely
+# discouraged, and the first person in a hurry writes the join.
+#
+#   postgres-shared    5432   core, community_vault, clinical_vault, billing_vault
+#   postgres-identity  5433   identity_vault
+#   postgres-audit     5434   audit_vault
+#
+# Total idle footprint is roughly 150 MB. Cheap insurance.
+
+name: alaap-dev
+
+x-postgres-common: &postgres-common
+  image: postgres:17-alpine
+  restart: unless-stopped
+  stop_grace_period: 10s
+  command:
+    # Verbose enough to see what a migration actually did, quiet enough to read.
+    - postgres
+    - -c
+    - log_statement=ddl
+    - -c
+    - log_connections=off
+    - -c
+    - max_connections=100
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Shared instance — core plus three vaults, each its own database, its own role
+  # set and (in production) its own encryption key.
+  # ---------------------------------------------------------------------------
+  postgres-shared:
+    <<: *postgres-common
+    container_name: alaap-postgres-shared
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SHARED_PASSWORD:?set it in .env}
+      POSTGRES_DB: postgres
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports:
+      - "127.0.0.1:${POSTGRES_SHARED_PORT:-5432}:5432"
+    volumes:
+      - postgres-shared-data:/var/lib/postgresql/data
+      - ./initdb/shared:/docker-entrypoint-initdb.d:ro
+      # Read-only so a migration cannot be edited from inside the container.
+      - ../../../database:/alaap/database:ro
+    networks: [core]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  # ---------------------------------------------------------------------------
+  # Identity instance — the records whose disclosure is unrecoverable.
+  #
+  # On its own network. A memory-disclosure bug in community code must not be able
+  # to reach legal names, verified numbers or emergency contacts (§1).
+  # ---------------------------------------------------------------------------
+  postgres-identity:
+    <<: *postgres-common
+    container_name: alaap-postgres-identity
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_IDENTITY_PASSWORD:?set it in .env}
+      POSTGRES_DB: postgres
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports:
+      - "127.0.0.1:${POSTGRES_IDENTITY_PORT:-5433}:5432"
+    volumes:
+      - postgres-identity-data:/var/lib/postgresql/data
+      - ./initdb/identity:/docker-entrypoint-initdb.d:ro
+      - ../../../database:/alaap/database:ro
+    networks: [identity]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  # ---------------------------------------------------------------------------
+  # Audit instance — must survive an attacker who owns the application database,
+  # or they erase their own tracks (§8). Separate instance, separate credentials.
+  # ---------------------------------------------------------------------------
+  postgres-audit:
+    <<: *postgres-common
+    container_name: alaap-postgres-audit
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_AUDIT_PASSWORD:?set it in .env}
+      POSTGRES_DB: postgres
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports:
+      - "127.0.0.1:${POSTGRES_AUDIT_PORT:-5434}:5432"
+    volumes:
+      - postgres-audit-data:/var/lib/postgresql/data
+      - ./initdb/audit:/docker-entrypoint-initdb.d:ro
+      - ../../../database:/alaap/database:ro
+    networks: [core]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  # ---------------------------------------------------------------------------
+  # Redis — sessions, rate limit counters, and later BullMQ.
+  #
+  # appendonly is on so a restart during development does not log you out. In
+  # production, losing Redis logging everyone out is CORRECT behaviour and must not
+  # be "fixed" with a fallback that weakens revocation (§5) — persistence here is a
+  # local convenience, not a design position.
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: alaap-redis
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:?set it in .env}
+      - --appendonly
+      - "yes"
+      - --maxmemory-policy
+      - noeviction
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks: [core]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+  # ---------------------------------------------------------------------------
+  # OpenBao — key management (§6). Apache-2.0 fork of Vault.
+  #
+  # Dev mode: in-memory, auto-unsealed, fixed root token. Fine for M0, where the
+  # point is that services can reach a Transit engine at all. File storage and a
+  # real unseal ceremony arrive when the clinical vault does (M7).
+  # ---------------------------------------------------------------------------
+  openbao:
+    image: openbao/openbao:2.4.1
+    container_name: alaap-openbao
+    restart: unless-stopped
+    cap_add: [IPC_LOCK]
+    environment:
+      BAO_DEV_ROOT_TOKEN_ID: ${OPENBAO_ROOT_TOKEN:?set it in .env}
+      BAO_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      BAO_ADDR: http://127.0.0.1:8200
+    command: ["server", "-dev"]
+    ports:
+      - "127.0.0.1:${OPENBAO_PORT:-8200}:8200"
+    networks: [core, identity]
+    healthcheck:
+      test: ["CMD-SHELL", "bao status -address=http://127.0.0.1:8200 >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+networks:
+  # Two segments, mirroring the deployable split. Today every port is published to
+  # 127.0.0.1 and the services run on the host, so the separation is documentary
+  # rather than enforced — it becomes real when the services are containerised and
+  # the published ports come off.
+  core:
+    name: alaap-core
+  identity:
+    name: alaap-identity
+
+volumes:
+  postgres-shared-data:
+  postgres-identity-data:
+  postgres-audit-data:
+  redis-data:

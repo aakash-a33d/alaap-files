@@ -1,0 +1,167 @@
+# Service registry
+#
+# The seventeen backend services, the deployable each runs in, the API groups it
+# serves and the tables it owns. A table has exactly one owning service; services do
+# not read each other's tables (backend/README.md, "Service boundaries").
+#
+# Vault permissions are not here — they live in
+# metadata/access-control/vault-access-matrix/.
+#
+# Reasoning: docs/backend/backend-requirements.md
+# Validated by: metadata/schemas/service-registry.schema.json
+
+version: 1
+
+deployables:
+  core: Gateway, fifteen domain services and workers. Node.js.
+  identity-isolate: Identity vault and break-glass. Own network segment and credentials.
+  ai-tier: Orchestrator and AI zones. Python. See ai-services/.
+
+services:
+
+  - id: gateway
+    deployable: core
+    api_groups: ["*"]
+    owns: []
+    note: >-
+      Sole entry point for the frontend. Authenticates, validates session, checks role,
+      consent and purpose, rate limits, minimises, authorises service-to-service, and
+      writes an audit event. Owns no tables.
+
+  - id: auth-service
+    deployable: core
+    api_groups: [/api/auth, /api/passkeys, /api/account]
+    owns:
+      [auth_accounts, passkey_credentials, trusted_devices, sessions, recovery_codes,
+       login_events]
+
+  - id: pseudonym-service
+    deployable: core
+    api_groups: [/api/pseudonym]
+    owns: [pseudo_profiles, block_lists]
+    note: >-
+      The handle is a column on pseudo_profiles and is permanent — one per persona,
+      and therefore one per verified mobile number. The rotating-handle design and its
+      rotation log were removed in community-vault/0002_permanent_handles.sql.
+
+  - id: identity-vault-service
+    deployable: identity-isolate
+    api_groups: []
+    owns:
+      [identity_vault_records, emergency_contacts, care_verification_records,
+       identity_access_requests, identity_access_grants, identity_consent_records]
+    note: >-
+      Internal API only — never routed to the frontend. Holds identity-level consent
+      records; all other consent lives with consent-service.
+
+  - id: community-service
+    deployable: core
+    api_groups: [/api/community]
+    owns:
+      # post_visibility_rules and hidden_replies were dropped in
+      # community-vault/0005_drop_reply_visibility.sql. Reply visibility is not gated
+      # on any plan; see never_gated in metadata/catalog/plans/.
+      [community_posts, community_comments,
+       community_categories, user_reports, account_restrictions]
+
+  - id: ai-orchestrator
+    deployable: ai-tier
+    api_groups: [/api/ai]
+    # Deliberately empty. The AI tier holds no vault credential at all: it is given
+    # text, returns a verdict, and keeps nothing. That is what makes it safe to run a
+    # 506M-parameter model on the same box as the databases — a compromise of the
+    # classifier yields no rows.
+    owns: []
+
+  - id: moderation-service
+    deployable: core
+    api_groups: [/api/moderation, /api/moderator]
+    owns:
+      [moderation_verdicts, moderation_categories, moderation_reviews,
+       moderation_appeals, moderation_policy_versions, user_reports]
+    note: >-
+      Owns appeals, though they originate from community content. Appeal outcomes are
+      moderation decisions and belong with the policy versions that produced them.
+
+      `user_reports` moved here from community-service in
+      roles-grants/0008_reports_to_moderation.sql: a report is an input to
+      adjudication, and a reviewer needs it beside the verdict. `account_restrictions`
+      deliberately stays with community-service - moderation decides, the posting
+      service enforces.
+
+  - id: consent-service
+    deployable: core
+    api_groups: [/api/consent, /api/privacy]
+    owns:
+      [consent_records, consent_versions, consent_withdrawals, record_access_policies,
+       retention_preferences]
+
+  - id: clinical-vault-service
+    deployable: core
+    api_groups: [/api/journal, /api/mood, /api/stories]
+    owns:
+      [journal_entries, mood_checkins, short_stories, therapist_notes,
+       insight_artifacts, attachment_metadata, clinical_record_access_policies]
+
+  - id: care-therapy-service
+    deployable: core
+    api_groups: [/api/therapy, /api/groups, /api/appointments]
+    owns:
+      [therapy_groups, group_memberships, group_sessions, session_participants,
+       care_relationships, appointments, therapy_tasks, session_summaries]
+
+  - id: therapist-service
+    deployable: core
+    api_groups: [/api/therapists]
+    owns:
+      [therapist_profiles, therapist_credentials, therapist_verification_records,
+       therapist_availability]
+    note: Reads payouts from billing-subsidy-service; does not own them.
+
+  - id: billing-subsidy-service
+    deployable: core
+    api_groups: [/api/plans, /api/subsidies, /api/billing]
+    owns:
+      [plans, subscriptions, payments, invoices, subsidy_programs, subsidy_allocations,
+       partner_funds, therapist_payouts, refunds]
+
+  - id: safety-crisis-service
+    deployable: core
+    api_groups: [/api/safety]
+    owns: [safety_signals, risk_assessments, safety_reviewer_actions]
+    note: Opens cases through break-glass-service; does not own them.
+
+  - id: break-glass-service
+    deployable: identity-isolate
+    api_groups: [/api/break-glass]
+    owns: [break_glass_cases, emergency_actions, threshold_approvals]
+
+  - id: notification-service
+    deployable: core
+    api_groups: [/api/notifications]
+    owns: [notification_templates, notification_deliveries, notification_preferences]
+
+  - id: audit-service
+    deployable: core
+    api_groups: []
+    owns:
+      [audit_events, audit_event_hashes, admin_action_logs, therapist_access_logs,
+       emergency_access_logs, ai_access_logs]
+    note: >-
+      Internal API only. Every other service writes through an INSERT-only role; this
+      service holds the read and sealing paths.
+
+  - id: retention-service
+    deployable: core
+    api_groups: [/api/data-rights]
+    owns: [data_deletion_requests, retention_jobs, export_requests, deletion_audit_logs]
+
+  - id: admin-service
+    deployable: core
+    api_groups: [/api/admin]
+    owns: [admin_users, admin_role_assignments, incident_records, access_reviews]
+
+  - id: partner-service
+    deployable: core
+    api_groups: [/api/partner]
+    owns: [partner_organisations, partner_programmes, partner_referral_codes]

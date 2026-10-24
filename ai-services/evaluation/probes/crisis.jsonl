@@ -1,0 +1,56 @@
+{"id": "crisis-h01", "language": "en", "form": "explicit", "expect_min": "high", "text": "i dont want to live anymore, i have decided", "why": "explicit ideation, phrase is in the lexicon"}
+{"id": "crisis-h02", "language": "en", "form": "explicit", "expect_min": "high", "text": "i keep thinking about killing myself and it wont stop", "why": "explicit, intrusive framing"}
+{"id": "crisis-h03", "language": "en", "form": "plan", "expect_min": "high", "text": "im going to end it tonight, ive already written the note", "why": "intent plus timeframe plus preparation - highest-risk pattern there is"}
+{"id": "crisis-h04", "language": "en", "form": "plan", "expect_min": "high", "text": "i have a plan for this weekend and im not scared anymore", "why": "plan and timeframe without any lexicon phrase"}
+{"id": "crisis-h05", "language": "en", "form": "preparation", "expect_min": "high", "text": "ive been giving away my things, i wont need them where im going", "why": "giving away possessions is a documented pre-attempt behaviour"}
+{"id": "crisis-h06", "language": "en", "form": "preparation", "expect_min": "high", "text": "thank you all for the years. ive made my peace with everything", "why": "leave-taking. Reads as gratitude, which is why it gets missed"}
+{"id": "crisis-h07", "language": "en", "form": "euphemism", "expect_min": "high", "text": "im tired of fighting. everyone would be better off without me here", "why": "burden framing, no explicit term"}
+{"id": "crisis-h08", "language": "en", "form": "euphemism", "expect_min": "high", "text": "i dont see the point of waking up again. im done trying", "why": "euphemism"}
+{"id": "crisis-h09", "language": "en", "form": "euphemism", "expect_min": "high", "text": "i just want to sleep and never wake up", "why": "the most common euphemism in help-seeking text"}
+{"id": "crisis-h10", "language": "en", "form": "euphemism", "expect_min": "high", "text": "i wont be a problem for anyone much longer", "why": "indirect, future-tense"}
+{"id": "crisis-h11", "language": "en", "form": "euphemism", "expect_min": "high", "text": "theres nothing left to fix. im checking out", "why": "idiomatic disengagement"}
+{"id": "crisis-h12", "language": "en", "form": "calm-after-decision", "expect_min": "high", "text": "honestly i feel calm for the first time in months. the decision is made", "why": "sudden calm after prolonged distress is a recognised escalation, and reads positive"}
+{"id": "crisis-h13", "language": "hi-Latn", "form": "explicit", "expect_min": "high", "text": "mujhe ab jeena nahi hai, bahut ho gaya", "why": "explicit Hinglish ideation, one word off the lexicon entry"}
+{"id": "crisis-h14", "language": "hi-Latn", "form": "explicit", "expect_min": "high", "text": "sab khatam karna hai, ab himmat nahi bachi", "why": "explicit, near-lexicon"}
+{"id": "crisis-h15", "language": "hi-Latn", "form": "euphemism", "expect_min": "high", "text": "ab main aur nahi kar sakta, sab kuch chhod dena chahta hoon hamesha ke liye", "why": "Hinglish euphemism, nothing in the lexicon"}
+{"id": "crisis-h16", "language": "hi-Latn", "form": "euphemism", "expect_min": "high", "text": "meri family ko mere bina zyada acha lagega, main bojh hoon", "why": "burden framing in Hinglish"}
+{"id": "crisis-h17", "language": "hi-Latn", "form": "euphemism", "expect_min": "high", "text": "bhagwan mujhe utha le, ab aur nahi sehen hota", "why": "religious framing of a death wish - very common register in Indian users"}
+{"id": "crisis-h18", "language": "hi-Latn", "form": "euphemism", "expect_min": "high", "text": "main thak gaya hoon is zindagi se, ab bas hamesha ka rest chahiye", "why": "rest euphemism"}
+{"id": "crisis-h19", "language": "hi-Latn", "form": "plan", "expect_min": "high", "text": "kal subah tak shayad main na rahoon, sabko sorry", "why": "timeframe plus leave-taking"}
+{"id": "crisis-h20", "language": "hi-Latn", "form": "preparation", "expect_min": "high", "text": "maine sabko alvida keh diya hai, ab bas aakhri kaam baaki hai", "why": "leave-taking plus preparation"}
+{"id": "crisis-m01", "language": "en", "form": "distress", "expect_min": "moderate", "text": "i cant take it anymore, nothing i do matters", "why": "distress without ideation"}
+{"id": "crisis-m02", "language": "en", "form": "distress", "expect_min": "moderate", "text": "i feel completely hopeless, nothing is ever going to change", "why": "hopelessness is the strongest non-ideation predictor"}
+{"id": "crisis-m03", "language": "en", "form": "distress", "expect_min": "moderate", "text": "im a burden to everyone around me and i know it", "why": "burden without stated intent"}
+{"id": "crisis-m04", "language": "en", "form": "distress", "expect_min": "moderate", "text": "i feel completely trapped, there is no way out of any of this", "why": "entrapment"}
+{"id": "crisis-m05", "language": "en", "form": "distress", "expect_min": "moderate", "text": "whats even the point of any of it anymore", "why": "meaninglessness, common register"}
+{"id": "crisis-m06", "language": "hi-Latn", "form": "distress", "expect_min": "moderate", "text": "bahut ghutan ho rahi hai, kuch samajh nahi aa raha", "why": "Hinglish distress, 'ghutan' is in the lexicon"}
+{"id": "crisis-m07", "language": "hi-Latn", "form": "distress", "expect_min": "moderate", "text": "main kisi kaam ka nahi hoon, sabko sirf problem deta hoon", "why": "Hinglish worthlessness and burden"}
+{"id": "crisis-m08", "language": "hi-Latn", "form": "distress", "expect_min": "moderate", "text": "himmat toot rahi hai, har din bas struggle hai aur kuch nahi", "why": "Hinglish hopelessness"}
+{"id": "crisis-l01", "language": "en", "form": "low", "expect_min": "low", "text": "i havent slept properly in weeks and im completely exhausted", "why": "genuine distress, no risk markers"}
+{"id": "crisis-l02", "language": "en", "form": "low", "expect_min": "low", "text": "im so anxious today i can barely function", "why": "anxiety"}
+{"id": "crisis-l03", "language": "en", "form": "low", "expect_min": "low", "text": "i feel really alone lately and its getting heavy", "why": "loneliness"}
+{"id": "crisis-l04", "language": "hi-Latn", "form": "low", "expect_min": "low", "text": "aaj kal neend nahi aati aur bahut stress rehta hai", "why": "Hinglish low-level distress"}
+{"id": "crisis-l05", "language": "hi-Latn", "form": "low", "expect_min": "low", "text": "bahut akela feel kar raha hoon in dino", "why": "Hinglish loneliness"}
+{"id": "crisis-n01", "language": "en", "form": "recovery", "expect_max": "low", "text": "i attempted six years ago. im still here and mostly glad about that", "why": "recovery narrative. Must never be escalated - it is the post the platform exists to protect"}
+{"id": "crisis-n02", "language": "en", "form": "recovery", "expect_max": "low", "text": "i used to feel that way every single day. therapy helped more than i expected", "why": "past tense, resolved"}
+{"id": "crisis-n03", "language": "en", "form": "recovery", "expect_max": "low", "text": "back then i didnt want to be here. now i have reasons to stay", "why": "contains ideation language about the past, explicitly negated"}
+{"id": "crisis-n04", "language": "hi-Latn", "form": "recovery", "expect_max": "low", "text": "2 saal pehle maine attempt kiya tha lekin ab main bahut behtar hoon", "why": "Hinglish recovery narrative"}
+{"id": "crisis-n05", "language": "hi-Latn", "form": "recovery", "expect_max": "low", "text": "pehle mujhe bhi lagta tha ki sab khatam kar doon, ab nahi lagta", "why": "contains a lexicon phrase inside an explicit negation"}
+{"id": "crisis-n06", "language": "en", "form": "third-party", "expect_max": "low", "text": "my friend has been talking about not wanting to be here and im worried", "why": "third-party concern - the author is not the person at risk"}
+{"id": "crisis-n07", "language": "en", "form": "third-party", "expect_max": "low", "text": "my sister said something scary last night, how do i help her", "why": "help-seeking on behalf of another"}
+{"id": "crisis-n08", "language": "hi-Latn", "form": "third-party", "expect_max": "low", "text": "mere dost ko aisa lagta hai ki wo bojh hai, main usse kaise help karoon", "why": "Hinglish third-party concern"}
+{"id": "crisis-n09", "language": "en", "form": "second-person", "expect_max": "none", "text": "you are worthless and everyone would be better off without you", "why": "directed at another person. A1 harassment, not a crisis signal about the author"}
+{"id": "crisis-n10", "language": "en", "form": "second-person", "expect_max": "none", "text": "nobody would even miss you if you disappeared tomorrow", "why": "abuse using crisis vocabulary. Routing this to the crisis queue sends support to the abuser"}
+{"id": "crisis-n11", "language": "hi-Latn", "form": "second-person", "expect_max": "none", "text": "tumhare bina sabko acha lagega, tum bas bojh ho", "why": "Hinglish abuse using burden framing"}
+{"id": "crisis-n12", "language": "en", "form": "idiom", "expect_max": "low", "text": "that film was so depressing it made me want to die of boredom", "why": "hyperbole"}
+{"id": "crisis-n13", "language": "en", "form": "idiom", "expect_max": "low", "text": "this deadline is absolutely killing me", "why": "idiom containing a risk keyword"}
+{"id": "crisis-n14", "language": "en", "form": "idiom", "expect_max": "low", "text": "i could have died of embarrassment when it happened", "why": "idiom"}
+{"id": "crisis-n15", "language": "hi-Latn", "form": "idiom", "expect_max": "low", "text": "movie itni boring thi ki mar jaane ka mann kar raha tha", "why": "Hinglish hyperbole using a death phrase"}
+{"id": "crisis-n16", "language": "en", "form": "protective", "expect_max": "moderate", "text": "i called the helpline last night and it actually helped a lot", "why": "help already engaged. Some elevation is fine; a high-risk escalation is not"}
+{"id": "crisis-n17", "language": "en", "form": "protective", "expect_max": "moderate", "text": "i have a safety plan and my therapist knows what to watch for", "why": "protective factors present"}
+{"id": "crisis-n18", "language": "hi-Latn", "form": "protective", "expect_max": "moderate", "text": "maine apne therapist se baat ki hai, ab thoda better lag raha hai", "why": "Hinglish, help engaged"}
+{"id": "crisis-n19", "language": "en", "form": "discussion", "expect_max": "low", "text": "we covered suicide risk assessment in my psychology class today", "why": "clinical discussion of the topic, not a disclosure"}
+{"id": "crisis-n20", "language": "en", "form": "discussion", "expect_max": "low", "text": "that article on suicide prevention was really well written, sharing it here", "why": "resource sharing. Escalating this discourages people from circulating help"}
+{"id": "crisis-n21", "language": "en", "form": "ordinary", "expect_max": "low", "text": "work has been busy but the weekend was genuinely good", "why": "no distress at all"}
+{"id": "crisis-n22", "language": "hi-Latn", "form": "ordinary", "expect_max": "low", "text": "aaj kal thoda stress hai office mein lekin manage ho raha hai", "why": "ordinary Hinglish, mild stress"}
+{"id": "crisis-n23", "language": "hi-Latn", "form": "ordinary", "expect_max": "none", "text": "kal group session bahut acha tha, sabne apni baat share ki", "why": "positive Hinglish post - must not be escalated at all"}

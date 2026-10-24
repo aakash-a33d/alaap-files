@@ -1,0 +1,12 @@
+packages:
+  - frontend
+  - backend/gateway
+  - backend/services/*
+  - backend/workers/*
+  - backend/realtime/*
+  - packages/*
+  - tools/*
+# esbuild ships a platform binary and needs its postinstall. It arrives via vitest
+# and is a devDependency only — it is not in any deployed image.
+allowBuilds:
+  esbuild: true

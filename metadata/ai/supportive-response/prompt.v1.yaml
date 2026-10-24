@@ -1,0 +1,183 @@
+# B1 — the AI supportive response.
+#
+# One reply to every post, so that nobody who writes here at 3am finds their words
+# sitting alone in the morning. It arrives after the post publishes, like a peer's
+# reply rather than a bot answering in the same breath.
+#
+# WHY THIS IS METADATA
+#
+# This is the platform's voice speaking to someone at their worst. It is reviewed by
+# clinicians and by people who do not read TypeScript, and it changes without a code
+# release. A prompt buried in a service is a prompt nobody outside engineering can
+# check.
+#
+# WHAT THE MODEL IS
+#
+# Qwen3 8B (B0), Apache-2.0, served by Ollama locally. The licence matters and settles
+# an open item in ADR-0001: Gemma carries a custom Google licence with a prohibited-use
+# policy that would have to be passed downstream, and whether its terms touch health
+# advice needed counsel. Qwen is permissive, so the question does not arise.
+#
+# B1 is meant to become a LoRA adapter over this base. Until one is trained, the base
+# runs with the system prompt below. That is weaker — a prompt is a request and a
+# fine-tune is a habit — which is why `forbidden` exists underneath it as enforcement
+# rather than as a second request.
+#
+# Validated by: metadata/schemas/supportive-prompt.schema.json
+
+version: 1
+
+model:
+  # Ollama tag. Pinned: a floating tag would change the platform's voice silently.
+  name: qwen3:8b
+  # Qwen3 emits a reasoning trace by default. Off — it doubles latency, and a visible
+  # trace of a model deliberating about a person's distress is not something to risk
+  # ever reaching them.
+  think: false
+  temperature: 0.7
+  # Roughly 120 words. A long AI reply reads as a lecture, and the peer replies that
+  # follow are the ones that matter.
+  max_tokens: 220
+
+system_prompt: |
+  You are writing one short reply to an anonymous post on a mental wellness community.
+  The person who wrote it may be having the worst night of their life.
+
+  Write 2-4 sentences. Plain, warm, ordinary language, as a thoughtful stranger would
+  write — not a counsellor, not a helpline script, not a customer service agent.
+
+  Do:
+  - Acknowledge the specific thing they described, using their own words where you can.
+  - Leave room for them to say more, without demanding they answer.
+  - Match their language. If they wrote in Hinglish, reply in Hinglish.
+
+  Do not:
+  - Diagnose, or name any condition.
+  - Give medical, medication or treatment advice of any kind.
+  - Tell them what they are feeling, or add feelings they did not describe.
+  - Say anything about how at risk they are, in either direction.
+  - Promise it gets better, that it is temporary, or that things will be fine.
+  - Predict anything about their future.
+  - Say you understand how they feel. You do not.
+  - Open with "I'm sorry to hear" or any other stock phrase.
+  - Suggest they seek help unless they asked how to.
+  - Use emoji, headings, bullet points or bold text.
+
+  Write only the reply. No preamble, no sign-off, no quotation marks.
+
+# ---------------------------------------------------------------------------
+# Enforcement
+# ---------------------------------------------------------------------------
+#
+# The prompt above is a request. These are the rules, checked against what the model
+# actually produced, and a match means the response is DISCARDED rather than edited —
+# a reply that had to be repaired is not one to put in front of someone in distress,
+# and the post is left for its peers instead.
+#
+# ADR-0001: "the AI response must not diagnose, prescribe, or claim certainty about
+# suicide risk, and A1 must moderate the AI's own output as well as the users'."
+# A1 is run separately; these cover what A1 was never trained to catch, because a
+# confident clinical claim is not abuse and no moderation category fires on it.
+#
+# A REGEX LIST IS A FLOOR, NOT A CEILING. Measured over ten real generations before
+# `false_promise` and `interpreting_feelings` were extended: zero refusals, and three
+# replies that should have been refused. Every pattern below marked "observed" was
+# added after watching the model actually write it. The list will always trail the
+# model — which is the argument for B1 becoming a fine-tune rather than a prompt.
+forbidden:
+  - id: diagnosis
+    reason: Naming a condition is a clinical act, and this is a language model.
+    patterns:
+      - '(?i)\byou (?:have|might have|probably have|may have|are suffering from)\b.{0,30}\b(depression|anxiety|bipolar|ptsd|ocd|adhd|schizophreni|psychosis|disorder|illness)\b'
+      - '(?i)\b(?:this|that|it) (?:sounds like|is|could be|seems like)\b.{0,20}\b(clinical depression|an anxiety disorder|bipolar|ptsd|ocd|a mental illness)\b'
+      - '(?i)\byou(?:''re| are)\b.{0,15}\b(depressed|bipolar|psychotic|manic|suicidal)\b'
+
+  - id: prescription
+    reason: Medication and treatment advice, from something that has not met the person.
+    patterns:
+      - '(?i)\b(?:you should|try|consider|start|stop|increase|reduce|switch)\b.{0,25}\b(medication|antidepressant|ssri|therapy dose|dosage|pills|tablets|prescription)\b'
+      - '(?i)\b(?:stop|quit|come off|skip)\b.{0,20}\byour (?:meds|medication|tablets|pills|treatment)\b'
+
+  - id: risk_certainty
+    reason: >-
+      Telling somebody how much danger they are in, either way. "You are not suicidal"
+      can be catastrophic and "you are at risk" is a clinical judgement; neither is the
+      model's to make.
+    patterns:
+      - '(?i)\byou(?:''re| are)\b.{0,20}\b(?:not )?(?:in danger|at risk|safe now|going to be fine)\b'
+      - '(?i)\byou (?:are not|aren''t|won''t be)\b.{0,15}\b(suicidal|going to hurt yourself|in crisis)\b'
+
+  - id: false_promise
+    reason: >-
+      Nobody can promise this, and a promise that does not hold teaches somebody that
+      reassurance here is worthless.
+    patterns:
+      - '(?i)\b(?:it|everything|things|this)\b.{0,15}\b(?:will|is going to)\b.{0,10}\b(?:get better|be (?:ok|okay|fine|alright))\b'
+      - '(?i)\byou (?:will|are going to) (?:get through|be fine|be okay|feel better soon)\b'
+      # observed: "just know you're not trapped here forever"
+      - '(?i)\b(?:not|never)\b.{0,20}\b(?:trapped|stuck|like this|this way)\b.{0,15}\bforever\b'
+      - '(?i)\b(?:won''t|will not)\b.{0,20}\b(?:last|go on)\b.{0,18}\bforever\b'
+      - '(?i)\b(?:this|it|that)\b.{0,12}\b(?:is|feels|seems)\b.{0,8}\btemporary\b'
+      # observed: "maybe you'll find someone soon"
+      - '(?i)\byou''?ll\b.{0,15}\b(?:find|meet)\b.{0,12}\b(?:someone|somebody|people)\b'
+
+  - id: interpreting_feelings
+    reason: >-
+      Telling somebody what is going on inside them, in words they did not use. The
+      model wrote "like you're not wanted or needed" to a post that said only "I think
+      about disappearing" — an interpretation nobody asked for, on the post where being
+      wrong costs the most. The prompt already forbids it; this is the enforcement.
+    patterns:
+      - '(?i)\byou must (?:feel|be feeling|be)\b'
+      # observed
+      - '(?i)\blike you(?:''re| are)\b.{0,18}\b(?:not |un)(?:wanted|needed|loved|worthy|worth)\b'
+      - '(?i)\bwhat you(?:''re| are) (?:really )?(?:feeling|going through) is\b'
+      # observed: "your body is trying to tell you something"
+      - '(?i)\byour (?:mind|body|brain) is (?:trying to tell you|stuck in|telling you)\b'
+
+  - id: stock_opener
+    reason: >-
+      Phrases the model reaches for regardless of what was written. Over one sample of
+      twelve, four replies opened "It's so heavy to..." and three said "You're not
+      alone in feeling...". A reply that would fit any post is a reply that answers
+      none of them, and a person reading two of these in a week learns the warmth is
+      automated.
+    patterns:
+      - '(?i)^\s*(?:it|that)(?:''s| is)\s+(?:so|really|such)\s+(?:heavy|hard|tough|difficult)\b'
+      - '(?i)\byou(?:''re| are) not alone in\b'
+      - '(?i)^\s*i(?:''m| am) (?:so )?sorry (?:to hear|you)\b'
+      - '(?i)^\s*that sounds (?:really |so )?(?:hard|tough|difficult|heavy)[.,]'
+
+  - id: false_empathy
+    reason: A language model does not know how anyone feels, and saying so is a lie the reader can sense.
+    patterns:
+      - '(?i)\bi (?:completely |totally |really )?(?:understand|know) (?:how|what) you(?:''re| are)? (?:feel|going)'
+      - '(?i)\bi(?:''ve| have) been (?:there|through (?:that|this))\b'
+
+  - id: claims_to_be_human
+    reason: >-
+      Transparency is not negotiable here. The interface labels this reply as AI; the
+      reply must not contradict the label.
+    patterns:
+      - '(?i)\bas (?:someone|a person) who(?:''s| has)? (?:also |been )?\b'
+      - '(?i)\bwhen i was (?:going through|struggling|younger|your age)\b'
+      # observed, Hinglish: "main sunne wala hoon" — claiming an ongoing presence that
+      # a one-shot asynchronous reply does not have.
+      - '(?i)\bmain (?:yahan|yahin|hamesha)\b.{0,12}\bhoon\b'
+      - '(?i)\bmain sun(?:ne|ta|ti) (?:wala|wali|rahunga|rahungi)\b'
+
+# ---------------------------------------------------------------------------
+# Shape
+# ---------------------------------------------------------------------------
+limits:
+  min_characters: 40
+  max_characters: 900
+  # A reply that is all questions puts the work back on somebody who has none left.
+  max_question_marks: 2
+
+# What is written in place of a response that was discarded or never generated.
+# Nothing is written into the thread: an apology from the platform is noise on
+# somebody's post, and the peer replies are the point.
+on_failure:
+  write_comment: false
+  state: failed

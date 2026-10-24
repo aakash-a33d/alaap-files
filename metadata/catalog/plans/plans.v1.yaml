@@ -1,0 +1,186 @@
+# Plan catalogue
+#
+# Prices, entitlements and quotas. Read by billing-subsidy-service (pricing,
+# subscriptions, subsidy application) and by community-service (quota enforcement).
+#
+# NOT read by the gateway. The gateway holds no billing credentials and makes no
+# entitlement decision — it checks authentication, role, purpose and abuse rate
+# limits, and forwards. Quota is an entitlement question and belongs to the service
+# that owns the content being created.
+#
+# Reasoning: docs/backend/backend-requirements.md §9, docs/product/free-tier.md
+# Validated by: metadata/schemas/plans.schema.json
+
+# WHY THE QUOTAS ARE SHAPED THIS WAY
+#
+# Cost is incurred when content is WRITTEN, not when it is read:
+#
+#   a post           -> one AI supportive response (the largest single cost),
+#                       one A1 moderation pass, storage
+#   a written reply  -> one A1 moderation pass, storage, and human review if flagged
+#   a read reply     -> a few bytes
+#
+# So the quotas cap posting and replying, which is where the money goes. They do
+# not cap reading, which costs nothing and is the reason a person came.
+#
+# An earlier design limited how many replies an author could SEE on their own post.
+# That saved nothing — the reply had already been composed, scored, stored and
+# reviewed by the time the interface decided whether to show it — and it placed an
+# upgrade prompt in front of someone in acute distress. Removed deliberately;
+# `never_gated` below exists so it cannot come back by accident.
+
+version: 1
+currency: INR
+
+# Entitlements that are never conditioned on plan, subsidy, payment status or
+# quota exhaustion. A quota that is exhausted restricts what a person may WRITE.
+# It never restricts what they may read, and never touches the safety path.
+never_gated:
+  - replies-to-your-own-post
+  - crisis-resources
+  - safety-plan
+  - human-safety-escalation
+  - data-export
+  - account-deletion
+  - consent-withdrawal
+
+plans:
+
+  - id: anonymous-community
+    name: Anonymous Community
+    tier: 0
+    price:
+      standard: 0
+      subsidised: 0
+    quotas:
+      posts_per_month: 4
+      replies_written_per_month: 10
+      ai_responses_per_post: 1
+      post_visibility_days: 5
+      post_visibility_extendable_to_days: null
+      # 0 means unavailable on this plan, distinct from null, which means unmetered.
+      journal_entries_per_month: 0
+      short_stories_per_month: 0
+    entitlements:
+      - anonymous-posting
+      - ai-supportive-response
+      - all-replies-to-own-post
+      - report-and-appeal
+      - block-pseudonymous-user
+      - mood-checkin
+      - safety-plan
+    note: >-
+      Four posts a month is above what almost anyone uses. Someone who exceeds it is
+      the engaged user for whom ₹99 is worth paying, which is the correct place for
+      an upgrade prompt — not in front of an unread reply.
+
+      The private writing surfaces — journal and short stories — are NOT on this
+      plan. They are creation features with unbounded, non-expiring storage in the
+      clinical vault, per-record envelope encryption and a KMS operation per read, so
+      unlike a reply they carry real ongoing cost. They are also not the support
+      path: a person in distress on the free plan can post anonymously, use the
+      safety plan and reach crisis resources, none of which is gated.
+
+      `mood-checkin` deliberately stays free. It is a single number, its cost is
+      indistinguishable from zero, and it is the lowest-friction way for someone to
+      begin engaging at all.
+
+  - id: interaction-plus
+    name: Interaction Plus
+    tier: 1
+    price:
+      standard: 99
+      subsidised: 49
+    quotas:
+      posts_per_month: null            # null means unmetered
+      replies_written_per_month: null
+      ai_responses_per_post: 1
+      post_visibility_days: 5
+      post_visibility_extendable_to_days: 30
+      journal_entries_per_month: null
+      short_stories_per_month: null
+    entitlements:
+      - anonymous-posting
+      - ai-supportive-response
+      - all-replies-to-own-post
+      - ai-reflection-prompts
+      - journal
+      - short-stories
+      - support-circles
+      - baithak-rooms
+      - silent-company-rooms
+      - persistent-handle-within-circle
+      - saved-threads
+      - follow-tags
+      - private-anonymous-response-request
+      - extend-post-visibility
+    note: >-
+      The paid surface is the community layer plus the private writing surfaces —
+      never the support layer. Post visibility stays at five days by default here
+      too: extension is per-post and opt-in, because expiry is a privacy promise made
+      to everyone rather than a free-tier restriction.
+
+      Journal and short stories are both private by default and live in the clinical
+      vault under the same per-record consent rules as everything else there. A short
+      story may be shared to the community by an explicit action, at which point a
+      copy is published into the community vault and passes moderation like any other
+      post — the original stays private and stays clinical.
+
+  - id: guided-group-care
+    name: Guided Group Care
+    tier: 2
+    price:
+      standard: 799
+      subsidised: 399
+    quotas:
+      posts_per_month: null
+      replies_written_per_month: null
+      ai_responses_per_post: 1
+      post_visibility_days: 5
+      post_visibility_extendable_to_days: 30
+      journal_entries_per_month: null
+      short_stories_per_month: null
+      group_sessions_per_month: 4
+    entitlements:
+      - all-interaction-plus
+      - therapist-led-group
+      - guided-reflections
+      - moderated-group-space
+      - group-ai-summary-on-consent
+    requires_identity_tier: 2
+
+  - id: individual-care
+    name: Individual Care
+    tier: 3
+    price:
+      standard: provider-specific
+      subsidised: provider-specific
+    quotas:
+      posts_per_month: null
+      replies_written_per_month: null
+      ai_responses_per_post: 1
+      post_visibility_days: 5
+      post_visibility_extendable_to_days: 30
+      journal_entries_per_month: null
+      short_stories_per_month: null
+    entitlements:
+      - all-interaction-plus
+      - one-to-one-sessions
+      - care-dashboard
+      - therapist-supported-insights
+      - asynchronous-therapist-messaging
+    requires_identity_tier: 2
+    note: >-
+      Identity tier rises to 3 when the provider is a psychiatrist — the Telemedicine
+      Practice Guidelines attach to the practitioner type, not to the plan. See
+      docs/backend/backend-requirements.md §11.
+
+# Post expiry applies to every plan. A post is deleted from active systems at
+# expiry unless its author, asked at that moment, chooses to keep it in the
+# archive. Archived posts remain pseudonymous and are never search-indexed on any
+# plan. Default is not to keep.
+post_expiry:
+  default_days: 5
+  archive_on_expiry: opt-in
+  archive_default: false
+  search_indexed: never

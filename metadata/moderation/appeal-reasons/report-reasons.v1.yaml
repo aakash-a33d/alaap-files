@@ -1,0 +1,101 @@
+# Why a member reports something, and why they appeal.
+#
+# Two short lists, both user-facing. They are metadata because they are the words a
+# person reads at the moment they have decided something is wrong, and those words get
+# reviewed by people who do not edit TypeScript.
+#
+# WHAT A REPORT REASON IS FOR
+#
+# Routing and priority, not adjudication. The reason a member picks is their account of
+# what happened, not a finding — a reviewer reads the content and decides. So the list
+# is short and plain: a taxonomy fine enough to be accurate would be a form, and a
+# person who has just been hurt will not fill in a form.
+#
+# `report_reasons` deliberately does NOT mirror the classifier's sixteen categories.
+# Those are what A1 is trying to detect; these are what a person would say.
+#
+# Validated by: metadata/schemas/report-reasons.schema.json
+
+version: 1
+
+report_reasons:
+  - id: cruel_or_demeaning
+    label: Cruel or demeaning
+    blurb: Aimed at someone, meant to hurt.
+    routes_to: bullying_harassment
+
+  - id: encouraging_self_harm
+    label: Encouraging self-harm
+    blurb: Pushing someone toward hurting themselves, or dismissing help.
+    routes_to: self_harm_encouragement
+    # Goes to a human immediately regardless of what the classifier said. A1 has no
+    # working detector for this, so a member's report is the only signal there is.
+    priority: urgent
+
+  - id: threatening
+    label: Threatening
+    blurb: A threat, or trying to frighten someone.
+    routes_to: threats_intimidation
+    priority: urgent
+
+  - id: hateful
+    label: Hateful
+    blurb: Attacking someone for who they are.
+    routes_to: hate_speech
+
+  - id: sexual_or_predatory
+    label: Sexual or predatory
+    blurb: Sexual content, or someone being drawn into private contact.
+    routes_to: sexual_exploitation
+    priority: urgent
+
+  - id: personal_information
+    label: Shares personal information
+    blurb: Names, numbers, addresses — theirs or someone else's.
+    routes_to: stalking_doxxing
+    priority: urgent
+
+  - id: scam_or_selling
+    label: A scam, or selling something
+    blurb: Asking for money, or advertising.
+    routes_to: scams_financial_exploitation
+
+  - id: bad_medical_advice
+    label: Unsafe advice
+    blurb: Telling someone to stop medication, or something dangerous about their health.
+    routes_to: unsafe_medical_advice
+
+  - id: something_else
+    label: Something else
+    blurb: Tell us in your own words.
+    # No routing. A reviewer reads it. The catch-all exists because a taxonomy that
+    # forces a person to pick the nearest wrong box loses the thing they were reporting.
+    routes_to: null
+
+# ---------------------------------------------------------------------------
+# Appeals
+# ---------------------------------------------------------------------------
+#
+# An appeal is against a VERDICT — a decision the platform made about something a
+# member wrote. It is not a report, and the list is different because the question is
+# different: not "what did they do" but "why was this wrong".
+appeal_reasons:
+  - id: misunderstood
+    label: It was misread
+    blurb: What I meant is not how it was taken.
+
+  - id: quoting_someone
+    label: I was quoting or describing
+    blurb: I was repeating something that happened to me, not saying it to anyone.
+
+  - id: my_own_experience
+    label: I was talking about myself
+    blurb: I was describing my own situation, not encouraging anything.
+
+  - id: wrong_language_read
+    label: The language was read wrong
+    blurb: It was Hinglish or another language and the meaning did not carry.
+
+  - id: something_else
+    label: Something else
+    blurb: Tell us in your own words.

@@ -1,0 +1,263 @@
+# AI model registry — MVP
+#
+# Declarative source of truth for every model the platform runs. Services read this;
+# they do not hardcode model names, precisions or thresholds.
+#
+# Reasoning: docs/ai/ai-requirements.md
+# Validated by: metadata/schemas/model-registry.schema.json
+#
+# Append-only in spirit: supersede with mvp-models.v2.yaml rather than editing a
+# published version, because audit records reference the model version that produced
+# a verdict.
+
+version: 1
+status: mvp
+
+models:
+  - id: a1-safety-classifier
+    name: Community safety classifier
+    role: classification
+    zone: community-moderation
+    status: mvp
+    path: inline
+    base:
+      checkpoint: google/muril-large-cased
+      licence: Apache-2.0
+      parameters: 506M
+    training:
+      method: full-fine-tune
+      label_languages: [en]
+      transfer: zero-shot-cross-lingual
+    runtime:
+      device: cpu
+      precision: fp32
+      budget_ms: 150
+    outputs:
+      type: multi-label
+      categories_ref: metadata/moderation/categories
+    gates:
+      - clinical-safety-en
+      - false-positive-analysis
+
+  - id: a2-crisis-classifier
+    name: Crisis risk classifier
+    role: classification
+    zone: crisis-triage
+    status: mvp
+    path: inline
+    base:
+      checkpoint: google/muril-large-cased
+      licence: Apache-2.0
+      parameters: 506M
+    training:
+      method: full-fine-tune
+      label_languages: [en]
+      transfer: zero-shot-cross-lingual
+    runtime:
+      device: cpu
+      precision: fp32
+      budget_ms: 150
+    outputs:
+      type: single-label
+      categories_ref: metadata/safety/risk-levels
+    gates:
+      - clinical-safety-en
+      - false-positive-analysis
+      - clinician-signoff
+    notes: >-
+      Separate fine-tune from a1, never a second head. Moderation retrains must not
+      move crisis thresholds.
+
+  - id: a3-pii-detector
+    name: Personal data leak detector
+    role: detection
+    zone: community-moderation
+    status: mvp
+    path: inline
+    base:
+      checkpoint: google/muril-base-cased
+      licence: Apache-2.0
+      parameters: 238M
+    training:
+      method: token-classification
+      label_languages: [en]
+      transfer: zero-shot-cross-lingual
+    runtime:
+      device: cpu
+      precision: fp32
+      budget_ms: 40
+    outputs:
+      type: span
+    rules:
+      # Deterministic detectors run before the model; the model catches prose only.
+      - phone-e164-in
+      - email
+      - aadhaar-format-verhoeff
+      - upi-vpa
+      - url
+    gates:
+      - false-positive-analysis
+
+  - id: a4-on-device-warning
+    name: Pre-send personal data warning
+    role: rules
+    zone: on-device
+    status: mvp
+    path: client
+    runtime:
+      device: browser
+      budget_ms: 1
+    rules:
+      - phone-e164-in
+      - email
+      - aadhaar-format-verhoeff
+      - upi-vpa
+      - url
+    notes: >-
+      Rules only. No model ships to the browser at MVP. This is a UX affordance, not a
+      safety control — server-side a1/a2/a3 remain the gate.
+
+  - id: b0-generative-base
+    name: Generative base
+    role: base
+    zone: orchestrator
+    status: mvp
+    path: async
+    base:
+      checkpoint: Qwen/Qwen3-8B
+      licence: Apache-2.0
+      parameters: 8.2B
+    runtime:
+      device: gpu
+      precision: int4
+      cpu_fallback: true
+    notes: >-
+      Serves adapters b1 and b3. Community and confidential zones run separate
+      instances of these weights — isolation is of the process and data path, not the
+      checkpoint.
+
+  - id: b1-supportive-response
+    name: Community supportive response
+    role: adapter
+    zone: community-moderation
+    status: mvp
+    path: async
+    adapter_of: b0-generative-base
+    training:
+      method: lora
+      label_languages: [en]
+    outputs:
+      type: text
+      max_tokens: 200
+    gates:
+      - clinical-safety-en
+      - over-refusal
+      - red-team
+    notes: >-
+      Delivered over WebSocket after the post publishes. Never inline.
+
+  - id: b3-reword-explain
+    name: Reword suggestion and moderation rationale
+    role: adapter
+    zone: community-moderation
+    status: mvp
+    path: async
+    adapter_of: b0-generative-base
+    training:
+      method: lora
+      label_languages: [en]
+    outputs:
+      type: text
+      max_tokens: 150
+    gates:
+      - clinical-safety-en
+      - over-refusal
+
+# ---------------------------------------------------------------------------
+# Deferred. Listed so the registry is a complete map, not only what ships.
+# ---------------------------------------------------------------------------
+
+  - id: b2-therapist-insight
+    name: Therapist insight and session prep
+    role: adapter
+    zone: therapist-insight
+    status: deferred
+    path: async
+    adapter_of: b0-generative-base
+    milestone: 4
+
+  - id: b4-group-summary
+    name: Group session summary
+    role: adapter
+    zone: therapist-insight
+    status: deferred
+    path: async
+    adapter_of: b0-generative-base
+    milestone: 4
+
+  - id: c1-embeddings
+    name: Multilingual embeddings
+    role: embedding
+    zone: orchestrator
+    status: deferred
+    path: async
+    milestone: 4
+
+  - id: c2-asr
+    name: Session transcription
+    role: asr
+    zone: confidential-processing
+    status: deferred
+    path: async
+    milestone: 3
+    notes: >-
+      Recorded Review Session only. Pre-mask audio tap, streamed and never persisted.
+      See docs/ai/ai-requirements.md.
+
+  - id: c3-diarization
+    name: Speaker diarization
+    role: diarization
+    zone: confidential-processing
+    status: deferred
+    path: async
+    milestone: 3
+    notes: >-
+      Model not selected. NeMo (Apache-2.0) or pyannote (gated licence). Required by
+      the participation balance indicator.
+
+  - id: d1-subsidy-fraud
+    name: Subsidy fraud signals
+    role: rules
+    zone: subsidy-fraud
+    status: deferred
+    path: async
+    milestone: 5
+    notes: >-
+      Gradient-boosted trees, deliberately not an LLM. Money decisions must be
+      explainable to partner NGOs.
+
+  - id: d2-security-abuse
+    name: URL reputation and malware scanning
+    role: rules
+    zone: security-abuse
+    status: deferred
+    path: inline
+    milestone: 5
+
+# ---------------------------------------------------------------------------
+# Excluded, with cause. Recorded so they are not re-proposed.
+# ---------------------------------------------------------------------------
+
+excluded:
+  - checkpoint: facebook/nllb-200
+    reason: CC-BY-NC — non-commercial, unusable in this product
+  - checkpoint: CohereForAI/aya-expanse
+    reason: CC-BY-NC — non-commercial, unusable in this product
+  - checkpoint: google/gemma-3-12b-it
+    reason: >-
+      Prohibited Use Policy carries health-advice restrictions requiring legal opinion.
+      Revisit for Hindi launch only if counsel clears it.
+  - approach: translate-then-classify
+    reason: >-
+      Adds 150-500ms inline, compounds error across two stages, degrades the coercion
+      and crisis categories most, and breaks the appeals path.

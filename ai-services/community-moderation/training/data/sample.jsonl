@@ -1,0 +1,20 @@
+{"id":"syn-0001","text":"Had a hard week but talking to my sister helped a little.","labels":[],"source":"synthetic","adjudicated":true}
+{"id":"syn-0002","text":"Does anyone have advice for bringing up therapy with parents?","labels":[],"source":"synthetic","adjudicated":true}
+{"id":"syn-0003","text":"I slept through the night for the first time in months.","labels":[],"source":"synthetic","adjudicated":true}
+{"id":"syn-0004","text":"I feel worthless most days and I don't know who to talk to.","labels":[],"source":"synthetic","adjudicated":true,"note":"benign distress: must never be labelled harmful"}
+{"id":"syn-0005","text":"Six months of counselling and things are slowly getting better.","labels":[],"source":"synthetic","adjudicated":true}
+{"id":"syn-0006","text":"Feeling really anxious about work tomorrow, can't switch off.","labels":[],"source":"synthetic","adjudicated":true}
+{"id":"syn-0007","text":"You are worthless and pathetic, nobody here likes you.","labels":["bullying_harassment"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0008","text":"No one would miss you, honestly you should just end it.","labels":["self_harm_encouragement","bullying_harassment"],"source":"synthetic","adjudicated":true,"note":"multi-label"}
+{"id":"syn-0009","text":"Stop taking your medication, doctors only want your money.","labels":["unsafe_medical_advice"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0010","text":"Guaranteed returns, just transfer to my account first.","labels":["scams_financial_exploitation"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0011","text":"Click this link to verify your account and claim your prize.","labels":["malware_phishing"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0012","text":"If you really cared you would have replied. You owe me that.","labels":["manipulation_coercion"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0013","text":"Must be nice. I guess some people just get everything easy.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0014","text":"I am a doctor and your diagnosis is wrong, message me privately.","labels":["impersonation","unsafe_medical_advice"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0015","text":"Only I understand you. Don't talk to anyone else about this.","labels":["emotional_dependency_pressure"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0016","text":"I know where you live, you better watch your back.","labels":["threats_intimidation"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0017","text":"Don't tell anyone, it's our secret. How old are you?","labels":["grooming_exploitation"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0018","text":"Your suffering is punishment, pray instead of taking medicine.","labels":["religious_coercion","unsafe_medical_advice"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0019","text":"I found your address and I'm posting your details.","labels":["stalking_doxxing","threats_intimidation"],"source":"synthetic","adjudicated":true}
+{"id":"syn-0020","text":"Bahut ghutan ho rahi hai aajkal, kuch samajh nahi aa raha.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":true,"note":"Hinglish distress, benign"}

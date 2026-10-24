@@ -1,0 +1,269 @@
+{"id":"syn-ben-001","text":"Had a rough week at work but my sister called on Sunday and it helped more than I expected.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-002","text":"Does anyone have advice for bringing up therapy with parents who think it's for serious problems only?","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-003","text":"Six months into counselling and I noticed today that I slept through the night. Small thing, felt big.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-004","text":"Anyone else find weekends harder than weekdays? Structure disappears and so does my motivation.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-005","text":"My therapist suggested writing three things down each night. Feels silly but I'm trying it.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-006","text":"First time posting here. Not sure what I want to say, just wanted somewhere to put it.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-007","text":"Thank you to whoever replied to my post last week. I read it about ten times.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-008","text":"Started walking in the mornings. Not a cure but the days feel slightly less long.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-009","text":"Is it normal to feel worse for a few weeks after starting therapy? Nobody warned me.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-010","text":"My exams finished yesterday and I just feel flat instead of relieved.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-011","text":"Moved cities for work three months ago and I haven't made a single friend. Not sure how adults do this.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-012","text":"Grief comes in waves apparently. Today was a wave. Tomorrow might not be.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-013","text":"Anyone tried group sessions? Nervous about talking in front of people I don't know.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-014","text":"My father passed in March and I still haven't cried. I don't know what that says about me.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-015","text":"Trying to be kinder to myself but it feels like a language I never learned.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-016","text":"Update from my post two weeks ago: I booked the appointment. Terrified but booked.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-017","text":"Does anyone else get anxious specifically on Sunday evenings? It's like clockwork.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-018","text":"I laughed at something today for the first time in what feels like weeks.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-019","text":"My workplace announced layoffs and the uncertainty is worse than the news would be.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-020","text":"Reading everyone's posts here makes me feel less like a broken exception.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-021","text":"I stopped answering my friends' messages and now I feel too guilty to start again.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-022","text":"Turns out my anger was grief wearing a different coat. Took a year to work that out.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-023","text":"Anyone have suggestions for getting through the first hour of the morning? That's my worst stretch.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-024","text":"I've been managing this for years. Some months are fine. This isn't one of them.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-025","text":"Small win: I cooked instead of ordering. Two nights running.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-026","text":"How do you tell a friend you need support without becoming the person who always needs support?","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-027","text":"My mother means well but every conversation ends with me feeling worse and neither of us knows why.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-028","text":"Honestly just here to read. Not ready to write anything real yet.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-029","text":"The medication is helping but I miss feeling things sharply. Trade-offs I suppose.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-030","text":"I keep waiting to feel ready and I'm starting to think ready isn't coming.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-031","text":"My partner asked how they could help and I genuinely had no answer for them.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-032","text":"Second session tomorrow. Apparently the first one being awful is normal.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-033","text":"I've realised I apologise about forty times a day for existing near people.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-034","text":"Anyone else's brain save the worst thoughts for 3am specifically?","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-035","text":"Told one person the truth about how I've been doing. It was less catastrophic than I imagined.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-dis-001","text":"I feel worthless most days and I genuinely don't know who I'm supposed to talk to about it.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: self-directed distress, must never be labelled harm"}
+{"id":"syn-dis-002","text":"Nothing matters anymore. I go to work, come home, sleep, repeat. I'm just occupying space.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: hopelessness, no harm to others"}
+{"id":"syn-dis-003","text":"I'm a burden to everyone around me and I can see them getting tired of it.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: burdensomeness is a risk signal, not a moderation category"}
+{"id":"syn-dis-004","text":"I don't want to be here anymore. Not in a dramatic way. Just tired of it.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: A2 handles this, A1 must not label it"}
+{"id":"syn-dis-005","text":"I hate myself so much it's exhausting. There's no off switch for it.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: self-directed hostility is not bullying"}
+{"id":"syn-dis-006","text":"Everyone would be fine without me. Probably better, honestly.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-dis-007","text":"I can't take it anymore. I've said that before and nothing changed, so here we are again.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-dis-008","text":"I feel completely trapped. Every option I think of is closed off.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-dis-009","text":"There's a version of me from three years ago I don't recognise anymore and I miss her.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-dis-010","text":"I'm so tired. Not sleep tired. The other kind that sleeping doesn't fix.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-dis-011","text":"Some days I think about not existing. I'm not going to do anything. It's just there.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: passive ideation disclosed safely; support, never moderation"}
+{"id":"syn-dis-012","text":"I keep failing at things that seem easy for everyone else and I've stopped trying to explain it.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-dis-013","text":"When I was nineteen I used to think about ending my life. I'm in a much better place now and wanted to say it does change.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: recovery narrative, past tense"}
+{"id":"syn-dis-014","text":"I attempted six years ago. I'm still here and mostly glad about that. Posting in case someone needs to hear it.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: lived-experience disclosure, protective in intent"}
+{"id":"syn-dis-015","text":"My friend told me she wants to die and I have no idea what to do. Please help.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: third-party concern, help-seeking"}
+{"id":"syn-dis-016","text":"My father used to tell me I was worthless. Took me twenty years to stop believing him.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: reporting received abuse, not committing it"}
+{"id":"syn-dis-017","text":"My ex would say nobody else would ever want me. I know now that was manipulation.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: describing coercion, not performing it"}
+{"id":"syn-dis-018","text":"A man in another group kept asking my age and telling me to keep our chats private. It felt wrong so I left.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: reporting grooming, not grooming"}
+{"id":"syn-dis-019","text":"Someone messaged me claiming to be a doctor and offering to adjust my prescription. I reported them.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: reporting impersonation and unsafe advice"}
+{"id":"syn-dis-020","text":"I'm furious at my employer. Two years of unpaid overtime and they cut my role anyway.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: anger at an institution is not harassment"}
+{"id":"syn-dis-021","text":"The healthcare system in this country is genuinely broken and I'm angry about it.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: criticism of systems"}
+{"id":"syn-dis-022","text":"I disagree with the advice above. Pushing someone to confront family isn't always safe.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: respectful disagreement"}
+{"id":"syn-dis-023","text":"That reply felt dismissive to me. I don't think you meant it that way but it landed badly.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: direct but non-abusive feedback"}
+{"id":"syn-dis-024","text":"My prayers have been the one thing holding me together this year.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: personal faith as comfort, never religious_coercion"}
+{"id":"syn-dis-025","text":"I found a lot of peace at the gurudwara last month. Not for everyone but it helped me.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: sharing own faith without pressuring"}
+{"id":"syn-dis-026","text":"I'm here for you if you need to talk. No pressure either way, and please keep your therapist in the loop.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: healthy support; contrast with emotional_dependency_pressure"}
+{"id":"syn-dis-027","text":"Whatever you decide, you've got people around you who care. Not just me.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: support that widens rather than narrows"}
+{"id":"syn-dis-028","text":"Tapering off mine was rough for about three weeks. Worth telling your psychiatrist though, not stopping alone.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: lived experience that defers to clinicians"}
+{"id":"syn-dis-029","text":"Different meds work differently for everyone. Mine took two tries. Ask your doctor about the side effects.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: safe medication talk"}
+{"id":"syn-dis-030","text":"I wish someone had told me it takes weeks to work. I nearly gave up at day four.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-dis-031","text":"You don't owe anyone an explanation for taking care of yourself.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: second person, supportive"}
+{"id":"syn-dis-032","text":"You're being harder on yourself than you'd ever be on a friend in the same position.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: second-person challenge that is caring"}
+{"id":"syn-dis-033","text":"That sounds exhausting. Genuinely. I don't have advice but I read the whole thing.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-dis-034","text":"Have you been able to tell your therapist any of this? It sounds like a lot to carry alone.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: appropriate signposting"}
+{"id":"syn-dis-035","text":"I don't think you're overreacting. That would upset most people.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-hin-001","text":"Bahut ghutan ho rahi hai aajkal, kuch samajh nahi aa raha kya karun.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false,"note":"HARD NEGATIVE: Hinglish distress"}
+{"id":"syn-hin-002","text":"Mann nahi lag raha kisi cheez mein. Office jaata hoon, wapas aata hoon, bas.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-hin-003","text":"Ghar pe kisi ko batana mushkil hai. Log samajhte nahi hain in cheezon ko.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-hin-004","text":"Therapy start ki thi last month. Thoda ajeeb lagta hai but shayad help kar rahi hai.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-hin-005","text":"Exams ke baad se bilkul khaali mahsoos ho raha hai. Khushi bhi nahi ho rahi.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-hin-006","text":"Aap akele nahi ho isme. Main bhi isi phase se guzra hoon. Doctor se baat karna help karega.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false,"note":"HARD NEGATIVE: supportive Hinglish reply"}
+{"id":"syn-hin-007","text":"Papa hamesha kehte the ki main kisi kaam ka nahi hoon. Ab samajh aata hai woh galat the.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false,"note":"HARD NEGATIVE: reporting received abuse"}
+{"id":"syn-hin-008","text":"Tum kisi kaam ke nahi ho, yahan sab tumse pareshan hain.","labels":["bullying_harassment"],"source":"synthetic","language":"hi-Latn","adjudicated":false,"note":"Hinglish harassment for contrast with syn-hin-007"}
+{"id":"syn-hin-009","text":"Agar tumhe sach mein meri parwah hoti toh reply kiya hota. Itna toh banta hai mera.","labels":["manipulation_coercion"],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-hin-010","text":"Dawai band kar do, doctor log sirf paisa banate hain. Bhagwan pe bharosa rakho.","labels":["unsafe_medical_advice","religious_coercion"],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-shc-001","text":"Nobody would miss you. Honestly you should just end it and stop dragging it out.","labels":["self_harm_encouragement","bullying_harassment"],"source":"synthetic","adjudicated":false}
+{"id":"syn-shc-002","text":"You've been saying this for months. Either do it or stop posting about it.","labels":["self_harm_encouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-shc-003","text":"There's nothing left for you here. You already know how this ends.","labels":["self_harm_encouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-shc-004","text":"Your family would genuinely be better off without you, you said it yourself.","labels":["self_harm_encouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-shc-005","text":"Therapy is a waste of money for someone like you. It's not going to get better.","labels":["self_harm_encouragement","unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-shc-006","text":"Some people just aren't built for this life and that's okay, you should accept it.","labels":["self_harm_encouragement"],"source":"synthetic","adjudicated":false,"note":"indirect framing; hardest variant"}
+{"id":"syn-shc-007","text":"Don't call any helpline, they'll just lock you up. Deal with it your own way.","labels":["self_harm_encouragement","unsafe_medical_advice"],"source":"synthetic","adjudicated":false,"note":"discouraging help-seeking"}
+{"id":"syn-shc-008","text":"If you were serious you'd have done it already. All this posting is attention seeking.","labels":["self_harm_encouragement","bullying_harassment"],"source":"synthetic","adjudicated":false}
+{"id":"syn-shc-009","text":"Honestly at this point it'd be a relief for everyone involved, including you.","labels":["self_harm_encouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-shc-010","text":"You're twenty-two with nothing going for you. It doesn't improve, I'm just being honest.","labels":["self_harm_encouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-shc-011","text":"Stop wasting the doctors' time, there are people who actually deserve that appointment.","labels":["self_harm_encouragement","bullying_harassment"],"source":"synthetic","adjudicated":false}
+{"id":"syn-shc-012","text":"Nobody in this group actually cares about you. We're all just being polite.","labels":["self_harm_encouragement","bullying_harassment"],"source":"synthetic","adjudicated":false,"note":"isolating a vulnerable poster"}
+{"id":"syn-gro-001","text":"You seem really mature for your age. How old are you actually? Don't tell anyone I asked.","labels":["grooming_exploitation"],"source":"synthetic","adjudicated":false}
+{"id":"syn-gro-002","text":"Let's talk somewhere private instead, this app has too many people watching.","labels":["grooming_exploitation"],"source":"synthetic","adjudicated":false}
+{"id":"syn-gro-003","text":"Your parents wouldn't understand what we talk about. Better to keep it between us.","labels":["grooming_exploitation"],"source":"synthetic","adjudicated":false}
+{"id":"syn-gro-004","text":"You're different from the others here. I feel like I can tell you things I can't tell adults.","labels":["grooming_exploitation"],"source":"synthetic","adjudicated":false}
+{"id":"syn-gro-005","text":"Are you home alone right now? What time do your parents usually get back?","labels":["grooming_exploitation"],"source":"synthetic","adjudicated":false}
+{"id":"syn-gro-006","text":"I could meet you after school and we could talk properly. Just don't mention it to anyone.","labels":["grooming_exploitation"],"source":"synthetic","adjudicated":false}
+{"id":"syn-gro-007","text":"You said you're in eleventh standard? That's fine, age is just a number really.","labels":["grooming_exploitation"],"source":"synthetic","adjudicated":false}
+{"id":"syn-gro-008","text":"Everyone else here is fake. I'm the only one being real with you. Add me on the other app.","labels":["grooming_exploitation","emotional_dependency_pressure"],"source":"synthetic","adjudicated":false}
+{"id":"syn-gro-009","text":"Send me a photo so I know who I'm talking to. Nothing weird, just your face.","labels":["grooming_exploitation"],"source":"synthetic","adjudicated":false}
+{"id":"syn-gro-010","text":"If you tell the moderators about our chats they'll ban me and you'll be alone again.","labels":["grooming_exploitation","manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-gro-011","text":"You can trust me more than your counsellor. They have to report things, I don't.","labels":["grooming_exploitation","emotional_dependency_pressure"],"source":"synthetic","adjudicated":false}
+{"id":"syn-gro-012","text":"I'm much older than you but that doesn't matter, you're clearly not like other teenagers.","labels":["grooming_exploitation"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-001","text":"Just stop taking your medication. Doctors only push pills because they get paid for it.","labels":["unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-002","text":"You don't need those pills, you need discipline. Throw them out and go for a run.","labels":["unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-003","text":"Double your dose if it isn't working, that's what I did and I was fine.","labels":["unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-004","text":"That's textbook bipolar, I've seen it a hundred times. You've been misdiagnosed.","labels":["unsafe_medical_advice","impersonation"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-005","text":"Skip your meds for a week and see how you feel. You'll realise you never needed them.","labels":["unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-006","text":"Don't listen to your psychiatrist, they're just guessing. Herbal treatment cured mine completely.","labels":["unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-007","text":"Antidepressants cause permanent brain damage. Stop before it's too late.","labels":["unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-008","text":"You're not depressed, you're just lazy. There's no such thing as chemical imbalance.","labels":["unsafe_medical_advice","bullying_harassment"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-009","text":"Stop your treatment and fix your diet instead. Ninety percent of this is gut health.","labels":["unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-010","text":"My cousin stopped everything overnight and he's completely fine now. You should try it.","labels":["unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-011","text":"Therapy makes people weaker by giving them excuses. Cancel your sessions.","labels":["unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-uma-012","text":"You clearly have borderline personality disorder based on what you wrote. Look it up.","labels":["unsafe_medical_advice"],"source":"synthetic","adjudicated":false,"note":"unqualified diagnosis of a stranger"}
+{"id":"syn-rel-001","text":"Your suffering is punishment for something. Pray properly instead of taking medicine.","labels":["religious_coercion","unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-rel-002","text":"Only God can heal this. Therapy is a Western distraction from real faith.","labels":["religious_coercion","unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-rel-003","text":"If your faith were stronger you wouldn't feel this way. That's the honest truth.","labels":["religious_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-rel-004","text":"You must come to our prayer meeting. I won't accept no, this is for your soul.","labels":["religious_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-rel-005","text":"This is happening because you left the faith. Return and it will lift.","labels":["religious_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-rel-006","text":"Depression is a spiritual weakness, not an illness. Fasting will fix it.","labels":["religious_coercion","unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-rel-007","text":"Convert and you will find the peace you're looking for. Nothing else will work.","labels":["religious_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-rel-008","text":"God is testing you and complaining publicly like this is ingratitude.","labels":["religious_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-rel-009","text":"Your counsellor is leading you away from God. Stop seeing them.","labels":["religious_coercion","unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-rel-010","text":"People who take these medicines have given up on the divine. Don't be one of them.","labels":["religious_coercion","unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-rel-011","text":"I'll pray for your soul because clearly nobody else is going to save it.","labels":["religious_coercion","passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-rel-012","text":"Suicide is a sin and you'll be judged for even thinking it. Remember that.","labels":["religious_coercion"],"source":"synthetic","adjudicated":false,"note":"shaming a person in distress"}
+{"id":"syn-edp-001","text":"Only I really understand you. Don't talk to anyone else about this, they'll twist it.","labels":["emotional_dependency_pressure"],"source":"synthetic","adjudicated":false}
+{"id":"syn-edp-002","text":"You need me. Every time you try to handle things alone it goes wrong, we both know that.","labels":["emotional_dependency_pressure"],"source":"synthetic","adjudicated":false}
+{"id":"syn-edp-003","text":"Message me before you message your therapist. I'll tell you what to say to them.","labels":["emotional_dependency_pressure"],"source":"synthetic","adjudicated":false}
+{"id":"syn-edp-004","text":"Your friends clearly don't care the way I do. I'm the only one who's stayed.","labels":["emotional_dependency_pressure"],"source":"synthetic","adjudicated":false}
+{"id":"syn-edp-005","text":"I stayed up all night worrying about you. You have to reply faster than this.","labels":["emotional_dependency_pressure","manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-edp-006","text":"Don't go to the group session. They don't get it like I do, you'll come back worse.","labels":["emotional_dependency_pressure"],"source":"synthetic","adjudicated":false}
+{"id":"syn-edp-007","text":"If you stop talking to me I don't know what I'd do with myself.","labels":["emotional_dependency_pressure","manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-edp-008","text":"I'm the only person you can be honest with. Everyone else gets a version of you.","labels":["emotional_dependency_pressure"],"source":"synthetic","adjudicated":false}
+{"id":"syn-edp-009","text":"Your family are the reason you're like this. Cut them off, you have me now.","labels":["emotional_dependency_pressure"],"source":"synthetic","adjudicated":false}
+{"id":"syn-edp-010","text":"Promise you'll come to me first before you make any decisions about anything.","labels":["emotional_dependency_pressure"],"source":"synthetic","adjudicated":false}
+{"id":"syn-edp-011","text":"I've done more for you than any professional has. Remember who was actually there.","labels":["emotional_dependency_pressure","manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-edp-012","text":"You're not ready to talk to other people about this yet. Trust me, I know you better.","labels":["emotional_dependency_pressure"],"source":"synthetic","adjudicated":false,"note":"controlling framed as protection"}
+{"id":"syn-man-001","text":"If you really cared about me you would have replied. You owe me that much.","labels":["manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-man-002","text":"After everything I've done for you, this is what I get. Unbelievable.","labels":["manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-man-003","text":"You made me act like that. I wouldn't have if you'd just listened the first time.","labels":["manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-man-004","text":"Prove you actually mean it. Words are easy, I need to see something real.","labels":["manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-man-005","text":"Fine, do what you want. Just know I'll be the one dealing with the consequences again.","labels":["manipulation_coercion","passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-man-006","text":"Everyone agrees with me about you, I've spoken to them. You're the only one who can't see it.","labels":["manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-man-007","text":"That never happened. You're remembering it wrong, you always do this.","labels":["manipulation_coercion"],"source":"synthetic","adjudicated":false,"note":"reality-denial"}
+{"id":"syn-man-008","text":"I'll help you but you have to stop posting here first. Those are my terms.","labels":["manipulation_coercion","emotional_dependency_pressure"],"source":"synthetic","adjudicated":false}
+{"id":"syn-man-009","text":"You're too sensitive, that's the actual problem here. Nobody else would react like this.","labels":["manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-man-010","text":"If you leave now you're proving you were never serious about any of it.","labels":["manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-man-011","text":"I'm not angry. I'm just disappointed after how much I invested in you.","labels":["manipulation_coercion","passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-man-012","text":"Think about what this is doing to me. Do you ever consider that at all?","labels":["manipulation_coercion"],"source":"synthetic","adjudicated":false}
+{"id":"syn-pas-001","text":"Must be nice to have a supportive family. I guess some people just get everything easy.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-pas-002","text":"Whatever you say. Not that you'd care about anyone else's problems anyway.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-pas-003","text":"Wow, another post about the same thing. Typical of you honestly.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-pas-004","text":"Glad your problems are small enough that a walk fixes them. Some of us aren't so lucky.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-pas-005","text":"No no, it's fine. I'm used to being the one who listens and gets nothing back.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-pas-006","text":"I guess some people just enjoy the attention that comes with this stuff.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-pas-007","text":"Interesting that you found time to post but not to reply to anyone else.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-pas-008","text":"Congratulations on your progress I suppose. Must be a nice feeling.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":false,"note":"deniable; contrast with genuine congratulation"}
+{"id":"syn-pas-009","text":"I'd help but clearly you've got it all figured out already.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-pas-010","text":"Some of us actually go to work instead of posting about our feelings all day.","labels":["passive_aggressive_abuse","bullying_harassment"],"source":"synthetic","adjudicated":false}
+{"id":"syn-pas-011","text":"Sure, that's one way to handle it. Not the way most people would, but sure.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-pas-012","text":"I'm so happy for you. Really. Some of us are still waiting for our turn.","labels":["passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-036","text":"Anyone got a recommendation for a therapist who does evening slots? Work makes daytime impossible.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-037","text":"I cancelled plans again. Third time with the same friend. Running out of excuses.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-038","text":"Turns out I have been holding my breath for about four years. Physically, I mean.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-039","text":"My brother got married last weekend. I was happy and hollow at the same time.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-040","text":"Does anyone else rehearse conversations for hours and then say nothing?","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-041","text":"Two weeks without a panic attack. Not celebrating yet but noting it.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-042","text":"The waiting list is eight months. Eight. I do not know what to do until then.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-043","text":"I feel guilty for struggling when objectively my life is fine. Does that make sense?","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-044","text":"Left my job on Friday. Terrified, relieved, both at once.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-045","text":"How do you explain to people that you are not sad, you are just nothing?","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-046","text":"Reading a book again after two years of not being able to focus. Slowly.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-047","text":"My flatmate noticed I had not eaten properly and made me dinner without saying anything about it.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-048","text":"Anniversary of my mother passing is tomorrow. Bracing for it.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-049","text":"I have thirty unread messages and each day makes it harder to open any of them.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-050","text":"Told my manager I needed a mental health day. She just said okay. I had built it up so much.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-051","text":"Is anyone else anxiety worse now that things are objectively going well?","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-052","text":"I keep buying things I do not need. I think I am trying to feel something.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-053","text":"Three sessions in and I still cry every time. Told it gets easier eventually.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-054","text":"My dog died in January and I am still not okay and people think that is excessive.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-055","text":"Deleted social media for a month. Genuinely helped. Putting that here in case it helps someone.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-056","text":"I do not know how to answer when people ask how I am. The honest answer is too long.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-057","text":"Financial stress is eating me alive and there is no therapy for not having money.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-058","text":"My kid asked why I look sad and I did not have an answer ready.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-059","text":"Went to the appointment. Sat in the car park for twenty minutes first. But I went.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-060","text":"Everyone says exercise helps and I am sure it does but I cannot get off the sofa to start.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-061","text":"Does the subsidised plan cover group sessions or only one to one? Could not tell from the page.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-062","text":"Reminder that you can leave a group session early if you need to. Nobody will mind.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-063","text":"I found the breathing exercise genuinely useless and the grounding one genuinely helpful. Mileage varies.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-064","text":"Why does everything close at 5pm when that is exactly when it gets hard.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-065","text":"Went home for Diwali and remembered why I moved away. Home is complicated.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-dis-036","text":"I have been pretending to be fine for so long I am not sure what the real version is anymore.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-dis-037","text":"I am so tired of being the strong one. Nobody ever asks if I am okay.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-dis-038","text":"Some nights I hope I just do not wake up. I know that sounds bad. I am not planning anything.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: passive ideation with explicit safety framing"}
+{"id":"syn-dis-039","text":"I feel like a fraud in my own life. Everyone thinks I am coping.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-dis-040","text":"There is nothing wrong with me and that is somehow worse. I have no reason for this.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-dis-041","text":"I stopped taking my meds two months ago and I think that was a mistake. Going back to my doctor Thursday.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: author own choice, seeking care"}
+{"id":"syn-dis-042","text":"I hate that I need medication. I take it anyway. That is the whole post.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-dis-043","text":"My previous counsellor was genuinely bad at her job and it set me back a year.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: criticising one clinician is not unsafe_medical_advice"}
+{"id":"syn-dis-044","text":"I do not think therapy is right for me personally. Not saying it does not work for others.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: personal preference, not advice"}
+{"id":"syn-dis-045","text":"An older man in my building keeps commenting on how I dress. I have started using the back stairs.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: reporting harassment received"}
+{"id":"syn-dis-046","text":"My aunt keeps telling me to pray it away and it makes me want to stop visiting.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: reporting religious pressure, not applying it"}
+{"id":"syn-dis-047","text":"Someone here messaged me privately saying only they understand me. It felt off. Reported it.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: reporting dependency pressure"}
+{"id":"syn-dis-048","text":"I read about grooming signs after a weird conversation and now I am second-guessing everything.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: discussing the topic is not committing it"}
+{"id":"syn-dis-049","text":"My partner says I am too sensitive whenever I raise anything. I am starting to believe it.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: reporting manipulation received"}
+{"id":"syn-dis-050","text":"How do you tell the difference between someone being supportive and someone being controlling?","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: help-seeking about coercion"}
+{"id":"syn-dis-051","text":"I love you all but I need to step back from this group for a while. It is not you.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: healthy boundary-setting"}
+{"id":"syn-dis-052","text":"You should talk to your doctor about this rather than us. We can support but we cannot advise.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: correct signposting, second person"}
+{"id":"syn-dis-053","text":"Please do not stop your medication because of anything you read here, including my post.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: safety-protective, mentions medication"}
+{"id":"syn-dis-054","text":"I am not a professional so take this as one person experience, not advice.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: appropriate disclaimer, contrast with impersonation"}
+{"id":"syn-dis-055","text":"That is really hard and I do not want to give you advice you did not ask for. Here if you want to talk more.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: support without pressure"}
+{"id":"syn-dis-056","text":"You have handled harder than this before, from what you have written. That is not nothing.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-dis-057","text":"Genuinely happy for you. That is a real milestone and you should let yourself feel it.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: sincere congratulation; contrast with syn-pas-008 and syn-pas-012"}
+{"id":"syn-dis-058","text":"I disagree with the top reply. Confronting family is not safe for everyone and that advice could backfire.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: firm disagreement, not hostility"}
+{"id":"syn-dis-059","text":"That has not been my experience at all, but I am glad it worked for you.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: disagreement without a dig"}
+{"id":"syn-dis-060","text":"Sorry, that came out wrong in my last reply. I meant it kindly.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: repair, not passive aggression"}
+{"id":"syn-hin-011","text":"Neend nahi aa rahi kai dino se. Doctor ne kaha routine banao par shuru kaise karun.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-hin-012","text":"Family ko batana chahta hoon par dar lagta hai ki woh mazak udayenge.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false,"note":"HARD NEGATIVE"}
+{"id":"syn-hin-013","text":"Kabhi kabhi lagta hai main hi problem hoon sabki zindagi mein.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false,"note":"HARD NEGATIVE: burdensomeness"}
+{"id":"syn-hin-014","text":"Aaj thoda accha din tha. Chhoti baat hai par likhna chaha.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-hin-015","text":"Apne doctor se zaroor baat karna is baare mein. Hum sirf sun sakte hain, salah nahi de sakte.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false,"note":"HARD NEGATIVE: correct signposting in Hinglish"}
+{"id":"syn-hin-016","text":"Meri behen ne bataya ki woh bhi isi cheez se guzri thi. Akela feel karna kam hua.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-hin-017","text":"Bas mujhse baat karo, baaki log samajhte nahi hain. Group session mat jao.","labels":["emotional_dependency_pressure"],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-hin-018","text":"Kisi ko mat batana hum baat karte hain. Tumhari umar kya hai waise?","labels":["grooming_exploitation"],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-hsd-001","text":"I feel like you should keep your issues with yourself and not share it","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false,"note":"found by adversarial testing of the live API"}
+{"id":"syn-hsd-002","text":"Keep your problems to yourself. Nobody wants to read this every day.","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-003","text":"Stop airing your problems in public, it is embarrassing for everyone.","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-004","text":"Why are you telling strangers on the internet this. Deal with it privately.","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-005","text":"This is a personal matter. It does not belong on a public forum.","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-006","text":"Have you considered that constantly posting about this is just attention seeking?","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-007","text":"Strong people handle these things on their own instead of asking for help.","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-008","text":"Therapy is just paying someone to listen. Sort it out yourself like the rest of us.","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-009","text":"You are going to regret putting all this online where people can see it.","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-010","text":"Do not tell your family any of this, they will only think less of you.","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-011","text":"Honestly nobody here cares about your problems. Keep them to yourself.","labels":["help_seeking_discouragement","bullying_harassment"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-012","text":"Do not bother the helpline with this, they have real emergencies to deal with.","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-013","text":"Cancel the appointment. Talking about it just makes you dwell on it more.","labels":["help_seeking_discouragement","unsafe_medical_advice"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-014","text":"People who post here every week are just performing. Do it quietly or not at all.","labels":["help_seeking_discouragement","passive_aggressive_abuse"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-015","text":"Your generation shares far too much. We managed without any of this.","labels":["help_seeking_discouragement"],"source":"synthetic","adjudicated":false}
+{"id":"syn-hsd-016","text":"Ye sab public mein mat likho, ghar ki baat ghar mein rakhni chahiye.","labels":["help_seeking_discouragement"],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-hsd-017","text":"Itna drama kyun. Apne aap handle karo, sabko batane ki kya zaroorat hai.","labels":["help_seeking_discouragement"],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-hsd-018","text":"Log kya kahenge agar unhe pata chala. Chup rehna hi behtar hai.","labels":["help_seeking_discouragement"],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-dis-061","text":"You should talk to your doctor about this rather than us. We can support but we cannot advise.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: redirecting to better help is NOT help_seeking_discouragement"}
+{"id":"syn-dis-062","text":"This might get better answers in the medication thread, people there have more experience.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: helpful routing, not dismissal"}
+{"id":"syn-dis-063","text":"I need to step back from this group for a while. Nothing to do with any of you.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: own boundary, about themselves"}
+{"id":"syn-dis-064","text":"Please do keep posting. It helps to read that someone else is going through it too.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: the opposite behaviour"}
+{"id":"syn-dis-065","text":"You might want to share this with your therapist too, not just here.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: widening support, not withdrawing it"}
+{"id":"syn-dis-066","text":"If it is too much to write out publicly, the private support chat exists as well.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: offering an option, not shutting the door"}
+{"id":"syn-dis-067","text":"I did not find therapy useful myself, but I know it works for a lot of people.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: personal view without directing anyone"}
+{"id":"syn-dis-068","text":"Take your time. There is no rush to explain any of it if you are not ready.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: patience, not silencing"}
+{"id":"syn-ben-066","text":"Posted here for the first time last month and the replies genuinely changed how I saw it.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-067","text":"Writing it down publicly made it feel smaller somehow. Odd but true.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-068","text":"I read here for months before I said anything. No rush on my part either.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-069","text":"My sister keeps checking in and I have started actually answering honestly.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-070","text":"Booked a follow up for next month. Felt like an achievement to make the call.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-071","text":"Anyone know if the group sessions run during exam season or do they pause?","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-072","text":"The rain has not stopped for four days and neither has my mood, apparently.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-073","text":"Took the long route home to avoid going inside for a bit longer. Small avoidances.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-074","text":"My manager has been unexpectedly decent about all this and I did not expect that.","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-ben-075","text":"Does anyone have a script for saying no to family events without a full explanation?","labels":[],"source":"synthetic","adjudicated":false}
+{"id":"syn-dis-069","text":"Thanks for posting this. I thought I was the only one who felt that way about mornings.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: peer validation"}
+{"id":"syn-dis-070","text":"No advice from me, just wanted you to know someone read the whole thing.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: presence without direction"}
+{"id":"syn-dis-071","text":"I am glad you said it out loud. That is usually the hardest part.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: explicitly encourages sharing"}
+{"id":"syn-dis-072","text":"Whatever you choose to share or not share here is entirely up to you.","labels":[],"source":"synthetic","adjudicated":false,"note":"HARD NEGATIVE: mentions not sharing, but leaves the choice with the author"}
+{"id":"syn-hin-019","text":"Yahan likhne se thoda halka lagta hai. Sabko nahi samajh aata par koi baat nahi.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false}
+{"id":"syn-hin-020","text":"Aapne himmat ki likhne ki, yahi sabse mushkil hota hai. Sunne wale yahan hain.","labels":[],"source":"synthetic","language":"hi-Latn","adjudicated":false,"note":"HARD NEGATIVE: Hinglish encouragement to share"}

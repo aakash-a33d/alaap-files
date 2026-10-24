@@ -1,0 +1,520 @@
+# Handle vocabulary
+#
+# `QuietRiver-4821`, `PaperLantern-1174`, `SlowTide-2093` (§3.2).
+#
+# Every handle on the platform is drawn from these two lists. There is no way for a
+# member to choose their own, and that is the point: a name somebody picks is almost
+# always a name they already use somewhere else, and the moment it is reused here,
+# everything they have written about their mental health is searchable back to a real
+# identity. A drawn handle cannot carry that link because nobody chose it.
+#
+# THE SPACE IS A CEILING, NOT A COLLISION BUDGET
+#
+# Handles are permanent (community-vault/0002_permanent_handles.sql). A handle is
+# never returned to the pool, so adjectives x nouns x numbers is a hard limit on how
+# many accounts can ever exist — not a working set.
+#
+#   200 x 200 x 9000 = 360,000,000
+#
+# That is about 36x the platform's stated membership target of one crore. The earlier
+# 30 x 30 vocabulary gave 8.1 million, which sat BELOW the target: signup would have
+# begun failing at around eight million members, and long before that the retry loop
+# in personas.ts would have been drawing into a crowded space. pseudonym-service
+# refuses to start if this product drops under 100,000,000.
+#
+# WHAT BELONGS IN THESE LISTS
+#
+# These words appear beside posts written by people having the worst week of their
+# life, and beside replies from people trying to help. So:
+#
+#   * Nothing that reads as a mood, a diagnosis, or a verdict on a person. A handle is
+#     not allowed to editorialise about its owner.
+#   * Nothing about bodies, weight, or appearance.
+#   * Nothing violent, and nothing that evokes blood or injury — no crimson, scarlet,
+#     garnet. On this platform that is not squeamishness, it is the same line the
+#     safety classifier draws.
+#   * No religion, caste, community, politics, or brands.
+#   * Neutral-to-calm register throughout. Concrete things, mostly: materials, weather,
+#     landscape, plants, ordinary objects somebody might keep on a shelf.
+#   * Familiar in India as well as outside it. Neem, gulmohar, tiffin and sitar belong
+#     here as much as harbour and lantern do.
+#
+# Each word is 3-12 letters, capitalised, letters only — see HANDLE_PATTERN in
+# domain/handle.ts. Adding words widens the ceiling; removing them narrows it, so a
+# removal that drops the product below the floor will stop the service from booting
+# rather than quietly shrinking the platform's capacity.
+#
+# Validated by: metadata/schemas/handle-words.schema.json
+
+version: 1
+
+# 4 digits, 9000 values. The pattern accepts 4-6 digits so the 6-digit handles issued
+# during an earlier widening of this file stay valid; nothing issues them any more.
+number_min: 1000
+number_max: 9999
+
+# ---------------------------------------------------------------------------
+# Normalisation — the uniqueness key, and what recovery matches on
+# ---------------------------------------------------------------------------
+#
+# Two handles are the same handle if they normalise to the same string, and that
+# normalised form is what carries the UNIQUE index and what /api/auth/recover looks
+# up. It exists for one practical reason: somebody typing their handle to get back
+# into their account has usually copied it off a piece of paper, under stress, having
+# lost their phone.
+#
+# So case is folded, the hyphen is optional, and the characters people actually
+# mistype are folded together — O for 0, l for 1. `SlowTide-2093`, `slowtide2093` and
+# `SlowTide-2O93` all reach the same account.
+#
+# No impersonation concern applies here any more: every handle is drawn by the
+# platform from this file, so there is no way to register `Rahu1` next to `Rahul`.
+# Folding is purely a transcription aid now. Where two drawn handles ever did fold
+# together, the unique index refuses the second and the generator draws again.
+normalise:
+  case_fold: true
+  strip_separators: true
+  separators: "-_."
+  # 2, 6, 8 and 9 are deliberately absent: they are weak resemblances, and folding
+  # them would merge far more distinct handles than it would rescue mistyped ones.
+  confusables:
+    "0": o
+    "1": l
+    "3": e
+    "4": a
+    "5": s
+    "7": t
+
+# ---------------------------------------------------------------------------
+# First word — 200
+# ---------------------------------------------------------------------------
+adjectives:
+  # colours and tones
+  - Amber
+  - Auburn
+  - Azure
+  - Bronze
+  - Cerulean
+  - Cobalt
+  - Copper
+  - Coral
+  - Cream
+  - Dusty
+  - Emerald
+  - Fawn
+  - Golden
+  - Hazel
+  - Indigo
+  - Ivory
+  - Jade
+  - Lilac
+  - Mauve
+  - Ochre
+  - Olive
+  - Opal
+  - Pearl
+  - Peach
+  - Pewter
+  - Plum
+  - Rose
+  - Russet
+  - Saffron
+  - Sage
+  - Sand
+  - Sepia
+  - Sienna
+  - Silver
+  - Slate
+  - Teal
+  - Topaz
+  - Umber
+  - Violet
+  - Wheaten
+
+  # materials and textures
+  - Alabaster
+  - Bamboo
+  - Birch
+  - Brass
+  - Canvas
+  - Cane
+  - Cedar
+  - Ceramic
+  - Chalk
+  - Clay
+  - Cork
+  - Cotton
+  - Crystal
+  - Driftwood
+  - Glass
+  - Granite
+  - Jute
+  - Khadi
+  - Linen
+  - Maple
+  - Muslin
+  - Paper
+  - Pine
+  - Porcelain
+  - Rattan
+  - Rosewood
+  - Sandal
+  - Satin
+  - Seagrass
+  - Silken
+  - Stone
+  - Teak
+  - Terracotta
+  - Timber
+  - Velvet
+  - Walnut
+  - Wicker
+  - Willow
+  - Woollen
+  - Woven
+
+  # quiet qualities
+  - Quiet
+  - Still
+  - Slow
+  - Soft
+  - Gentle
+  - Calm
+  - Steady
+  - Easy
+  - Mild
+  - Even
+  - Plain
+  - Simple
+  - Clear
+  - Fresh
+  - Cool
+  - Warm
+  - Bright
+  - Faint
+  - Distant
+  - Open
+  - Wide
+  - Broad
+  - Deep
+  - Round
+  - Smooth
+  - Tender
+  - Light
+  - Silent
+  - Hushed
+  - Muted
+  - Subtle
+  - Sparse
+  - Spare
+  - Level
+  - Tidy
+  - Neat
+  - Supple
+  - Fluid
+  - Ample
+  - Placid
+
+  # weather and light
+  - Misty
+  - Foggy
+  - Cloudy
+  - Rainy
+  - Sunny
+  - Starry
+  - Moonlit
+  - Sunlit
+  - Windy
+  - Breezy
+  - Snowy
+  - Dewy
+  - Frosty
+  - Hazy
+  - Shady
+  - Overcast
+  - Wintry
+  - Autumn
+  - Summer
+  - Monsoon
+  - Vernal
+  - Twilit
+  - Dappled
+  - Glinting
+  - Gleaming
+  - Shimmering
+  - Glowing
+  - Radiant
+  - Lucent
+  - Prismatic
+
+  # motion and presence
+  - Wandering
+  - Drifting
+  - Floating
+  - Waiting
+  - Listening
+  - Watching
+  - Turning
+  - Rising
+  - Passing
+  - Settling
+  - Resting
+  - Roaming
+  - Sailing
+  - Gliding
+  - Winding
+  - Flowing
+  - Growing
+  - Blooming
+  - Humming
+  - Whispering
+  - Rustling
+  - Lingering
+  - Returning
+  - Curving
+  - Climbing
+  - Rambling
+  - Meandering
+  - Circling
+  - Tracing
+  - Weaving
+
+  # place and direction
+  - Northern
+  - Southern
+  - Eastern
+  - Western
+  - Coastal
+  - Inland
+  - Upland
+  - Lowland
+  - Riverside
+  - Seaside
+  - Highland
+  - Hillside
+  - Woodland
+  - Lakeside
+  - Pastoral
+  - Rural
+  - Alpine
+  - Tidal
+  - Marine
+  - Rustic
+
+# ---------------------------------------------------------------------------
+# Second word — 200
+# ---------------------------------------------------------------------------
+nouns:
+  # water
+  - River
+  - Tide
+  - Creek
+  - Brook
+  - Stream
+  - Lagoon
+  - Harbour
+  - Haven
+  - Delta
+  - Estuary
+  - Lake
+  - Pond
+  - Spring
+  - Cascade
+  - Shoal
+  - Shore
+  - Coast
+  - Dune
+  - Reef
+  - Channel
+  - Inlet
+  - Basin
+  - Current
+  - Ripple
+  - Wave
+  - Marsh
+  - Oasis
+  - Cove
+  - Fjord
+  - Rivulet
+  - Waterfall
+  - Wellspring
+  - Backwater
+  - Billow
+  - Eddy
+
+  # land and path
+  - Meadow
+  - Field
+  - Glade
+  - Grove
+  - Thicket
+  - Hedgerow
+  - Orchard
+  - Garden
+  - Terrace
+  - Plateau
+  - Ridge
+  - Knoll
+  - Valley
+  - Canyon
+  - Gorge
+  - Summit
+  - Slope
+  - Trail
+  - Path
+  - Lane
+  - Bridge
+  - Crossing
+  - Ford
+  - Pass
+  - Gateway
+  - Courtyard
+  - Veranda
+  - Balcony
+  - Rooftop
+  - Doorway
+  - Threshold
+  - Alcove
+  - Porch
+  - Clearing
+  - Footpath
+
+  # plants
+  - Neem
+  - Banyan
+  - Peepal
+  - Mango
+  - Tamarind
+  - Jasmine
+  - Marigold
+  - Lotus
+  - Lily
+  - Fern
+  - Moss
+  - Ivy
+  - Reed
+  - Mulberry
+  - Champa
+  - Gulmohar
+  - Aspen
+  - Ashoka
+  - Frangipani
+  - Palm
+  - Cypress
+  - Juniper
+  - Laurel
+  - Myrtle
+  - Orchid
+  - Tulip
+  - Clover
+  - Heather
+  - Lavender
+  - Basil
+  - Cardamom
+  - Cinnamon
+  - Blossom
+  - Petal
+  - Seedling
+
+  # objects and keepsakes
+  - Lantern
+  - Lamp
+  - Candle
+  - Beacon
+  - Compass
+  - Anchor
+  - Kite
+  - Ribbon
+  - Postcard
+  - Letter
+  - Envelope
+  - Notebook
+  - Almanac
+  - Atlas
+  - Bookmark
+  - Chapter
+  - Verse
+  - Sonnet
+  - Lullaby
+  - Melody
+  - Chorus
+  - Echo
+  - Bell
+  - Chime
+  - Flute
+  - Sitar
+  - Veena
+  - Tabla
+  - Locket
+  - Marble
+  - Pebble
+  - Seashell
+  - Feather
+  - Acorn
+  - Pinecone
+
+  # home and comfort
+  - Teacup
+  - Kettle
+  - Saucer
+  - Teapot
+  - Blanket
+  - Quilt
+  - Pillow
+  - Cushion
+  - Hammock
+  - Armchair
+  - Bookshelf
+  - Windowsill
+  - Mantel
+  - Hearth
+  - Keyring
+  - Umbrella
+  - Scarf
+  - Slipper
+  - Basket
+  - Satchel
+  - Suitcase
+  - Trunk
+  - Curtain
+  - Carpet
+  - Doormat
+  - Lampshade
+  - Coaster
+  - Napkin
+  - Thermos
+  - Tiffin
+
+  # sky
+  - Comet
+  - Orbit
+  - Eclipse
+  - Aurora
+  - Horizon
+  - Skyline
+  - Sunrise
+  - Sunset
+  - Moonrise
+  - Starlight
+  - Moonlight
+  - Daybreak
+  - Rainbow
+  - Zenith
+  - Nebula
+
+  # creatures
+  - Sparrow
+  - Swallow
+  - Heron
+  - Egret
+  - Crane
+  - Kingfisher
+  - Finch
+  - Lark
+  - Dove
+  - Swan
+  - Firefly
+  - Dragonfly
+  - Tortoise
+  - Otter
+  - Bulbul

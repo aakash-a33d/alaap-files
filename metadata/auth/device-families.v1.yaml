@@ -1,0 +1,57 @@
+# Device labels
+#
+# What a member sees in "where am I signed in": `Android phone`, `Mac`, `iPhone`.
+#
+# WHY THIS LIST EXISTS RATHER THAN STORING THE USER-AGENT
+#
+# A full user-agent string is a fingerprint. Stored against an account it becomes a
+# way to recognise the same browser across accounts — precisely the cross-linking
+# this platform exists to prevent, and precisely what an attacker who reached the
+# database would use to work out which two pseudonymous accounts belong to one
+# household. So the raw string is read once, matched against this list, and thrown
+# away. What is stored is one of the labels below, and nothing else.
+#
+# The labels are deliberately coarse. `Android phone` is enough for a member to
+# recognise their own handset in a list of two or three; `Mozilla/5.0 (Linux;
+# Android 14; SM-S911B)` is enough for somebody else to recognise it too.
+#
+# Members may rename a device, and most will — `Ma's phone`, `office laptop`. These
+# are only the defaults.
+#
+# ORDER MATTERS. The first family whose substrings ALL appear wins, so the specific
+# cases come before the general ones: an iPad also says "Safari", and an Android
+# tablet also says "Android".
+#
+# Validated by: metadata/schemas/device-families.schema.json
+
+version: 1
+
+# Used when nothing matches, and when no user-agent is sent at all.
+default_label: Unknown device
+
+families:
+  - label: iPad
+    all_of: [ipad]
+
+  - label: iPhone
+    all_of: [iphone]
+
+  # "Mobile" is what separates an Android phone from an Android tablet in the
+  # user-agent; tablets omit it.
+  - label: Android phone
+    all_of: [android, mobile]
+
+  - label: Android tablet
+    all_of: [android]
+
+  - label: Chromebook
+    all_of: [cros]
+
+  - label: Windows computer
+    all_of: [windows]
+
+  - label: Mac
+    all_of: [macintosh]
+
+  - label: Linux computer
+    all_of: [linux]

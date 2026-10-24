@@ -1,0 +1,1215 @@
+@import 'tailwindcss';
+@import './tokens/tokens.css';
+
+/* Semantic tokens into Tailwind's theme. Because these resolve per theme
+   scope, `bg-surface` is dark inside .theme-dark and light inside
+   .theme-light with no variant classes at the call site. */
+/* Holds the light theme's concrete values so the utilities generate.
+   `.theme-dark` in tokens.css redeclares the same names — which is the only
+   thing that works, since an alias to a scope-varying token substitutes at
+   :root and never re-resolves. */
+@theme {
+  --color-surface: #fcfbf8;
+  --color-sunken: #f5f3ed;
+  --color-raised: #ffffff;
+  --color-contrast: #0b0908;
+
+  --color-ink: #14120f;
+  --color-muted: #4a443c;
+  --color-faint: #7c7367;
+  --color-oncontrast: #f7f3eb;
+
+  --color-accent: #a9762a;
+  --color-accent-bright: #c9973e;
+  --color-safe: #46604c;
+  --color-caution: #a8481c;
+
+  --color-line: rgb(20 18 15 / 0.1);
+  --color-line-strong: rgb(20 18 15 / 0.18);
+
+  --font-display: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --ease-seam: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---------------------------------------------------------------- base -- */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    background: var(--ink-950);
+  }
+
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--on-surface);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* Display type is geometric, very large and very tight — the single
+     biggest visual shift from the previous serif treatment. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h3,
+  h4 {
+    line-height: 1.14;
+    letter-spacing: -0.022em;
+  }
+
+  p {
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--gold-500);
+    color: var(--ink-900);
+  }
+
+  /* Theme scopes only re-point tokens — they must never paint. Declaring
+     `background` on them in @layer utilities beats `bg-transparent`, which
+     silently made the transparent nav an opaque slab. Sections set their own
+     `bg-surface`; this rule sits in @layer base so `text-*` utilities win. */
+  .theme-dark,
+  .theme-light {
+    color: var(--on-surface);
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    display: block;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--paper-100);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--clay-300);
+    border-radius: 999px;
+    border: 3px solid var(--paper-100);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--clay-400);
+  }
+}
+
+/* ---------------------------------------------------------- components -- */
+
+@layer components {
+  .u-shell {
+    width: 100%;
+    max-width: var(--shell-max);
+    margin-inline: auto;
+    padding-inline: var(--spacing-gutter);
+  }
+
+  .u-shell-narrow {
+    width: 100%;
+    max-width: 62rem;
+    margin-inline: auto;
+    padding-inline: var(--spacing-gutter);
+  }
+
+  /* Eyebrow: a small mark + mono label, the pattern in refs 3 and 4. */
+  .u-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .u-eyebrow::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+
+  .u-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--on-surface-faint);
+  }
+
+  /* Section heading — centred by default, matching every reference. */
+  .u-h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.4vw, 3.5rem);
+    font-weight: 500;
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    color: var(--on-surface);
+  }
+
+  .u-lede {
+    font-size: clamp(1rem, 1.2vw, 1.125rem);
+    line-height: 1.62;
+    color: var(--on-surface-muted);
+    max-width: var(--measure);
+  }
+
+  /* Buttons ------------------------------------------------------------ */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: var(--btn-height);
+    padding: 0 1.5rem;
+    border-radius: var(--btn-radius);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition:
+      background-color var(--duration-normal) var(--ease-out),
+      border-color var(--duration-normal) var(--ease-out),
+      color var(--duration-normal) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+
+  .btn--primary {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+  }
+  .btn--primary:hover {
+    background: var(--btn-primary-bg-hover);
+  }
+  .btn--primary:active {
+    transform: translateY(1px);
+  }
+
+  .btn--ghost {
+    background: transparent;
+    color: var(--btn-ghost-fg);
+    border-color: var(--btn-ghost-border);
+  }
+  .btn--ghost:hover {
+    border-color: var(--on-surface);
+  }
+
+  /* The circular arrow that sits beside the CTA in refs 1 and 2. */
+  .btn--round {
+    min-height: var(--btn-height);
+    width: var(--btn-height);
+    padding: 0;
+    border-radius: 999px;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+    flex: none;
+  }
+  .btn--round:hover {
+    background: var(--btn-primary-bg-hover);
+  }
+
+  /* Surfaces ----------------------------------------------------------- */
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    padding: var(--card-padding);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Glass panel floating over the film, as in refs 1 and 2. */
+  .glass {
+    background: rgb(18 15 13 / 0.52);
+    border: 1px solid rgb(237 231 220 / 0.16);
+    border-radius: var(--panel-radius);
+    backdrop-filter: blur(20px) saturate(1.1);
+    -webkit-backdrop-filter: blur(20px) saturate(1.1);
+  }
+
+  .glass-tile {
+    background: rgb(237 231 220 / 0.09);
+    border: 1px solid rgb(237 231 220 / 0.12);
+    border-radius: var(--radius-lg);
+    transition:
+      background-color var(--duration-normal) var(--ease-out),
+      border-color var(--duration-normal) var(--ease-out);
+  }
+  .glass-tile:hover {
+    background: rgb(237 231 220 / 0.16);
+    border-color: rgb(237 231 220 / 0.24);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.72rem;
+    border-radius: var(--radius-full);
+    background: var(--chip-bg);
+    border: 1px solid var(--chip-border);
+    color: var(--chip-fg);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .chip--accent {
+    color: var(--accent);
+    border-color: var(--border-seam);
+    background: var(--accent-wash);
+  }
+
+  .chip--safe {
+    color: var(--safe);
+    border-color: color-mix(in srgb, var(--safe) 34%, transparent);
+    background: color-mix(in srgb, var(--safe) 10%, transparent);
+  }
+
+  /* The inline pill that sits *inside* a headline line in refs 1 and 2. */
+  .headline-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    vertical-align: middle;
+    padding: 0.42em 1em 0.46em;
+    border-radius: 999px;
+    background: rgb(247 243 235 / 0.96);
+    color: var(--ink-900);
+    font-family: var(--font-sans);
+    /* Relative to a ~6.75rem headline, so this stays small. Anything above
+       ~0.22em and the pill starts competing with the line it sits inside. */
+    font-size: clamp(0.7rem, 0.19em, 1.05rem);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1;
+    white-space: nowrap;
+    translate: 0 -0.22em;
+  }
+
+  /* Pricing cards ------------------------------------------------------
+     Every card is identical at rest. Colour is reserved entirely for the one
+     the pointer is on, so the section reads as a calm set rather than one
+     card shouting over three others.
+
+     The wash is a radial gradient that follows the cursor via --mx/--my,
+     written from a pointermove handler. It sits in a ::before so the card's
+     own background stays a flat token. */
+  .plan-card {
+    position: relative;
+    isolation: isolate;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    transition:
+      transform var(--duration-slow) var(--ease-out),
+      border-color var(--duration-slow) var(--ease-out),
+      box-shadow var(--duration-slow) var(--ease-out);
+  }
+
+  .plan-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity var(--duration-slow) var(--ease-out);
+    background: radial-gradient(
+      22rem 22rem at var(--mx, 50%) var(--my, 0%),
+      rgb(228 177 85 / 0.16),
+      rgb(228 177 85 / 0.05) 42%,
+      transparent 70%
+    );
+  }
+
+  /* A hairline that brightens from the cursor outward. */
+  .plan-card::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border-radius: inherit;
+    padding: 1px;
+    opacity: 0;
+    transition: opacity var(--duration-slow) var(--ease-out);
+    background: radial-gradient(
+      16rem 16rem at var(--mx, 50%) var(--my, 0%),
+      var(--gold-500),
+      transparent 65%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .plan-card:hover,
+  .plan-card:focus-within {
+    transform: translateY(-6px);
+    border-color: transparent;
+    box-shadow: var(--shadow-lift);
+  }
+
+  .plan-card:hover::before,
+  .plan-card:focus-within::before,
+  .plan-card:hover::after,
+  .plan-card:focus-within::after {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plan-card:hover,
+    .plan-card:focus-within {
+      transform: none;
+    }
+  }
+
+  .rule-seam {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--border-seam) 18%,
+      var(--border-seam) 82%,
+      transparent
+    );
+  }
+}
+
+/* ----------------------------------------------------------- utilities -- */
+
+@layer utilities {
+  .text-measure {
+    max-width: var(--measure);
+  }
+
+  .section-y {
+    padding-block: var(--spacing-section);
+  }
+
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.14;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+/* ------------------------------------------------------- member surface -- */
+
+/* The signed-in app runs a warmer, lower-contrast set than the marketing
+   pages: it is looked at daily and for long stretches, so the paper is a
+   shade deeper and the ink stops short of black. These stay scoped to
+   `.alaap-app` rather than joining tokens.css, because they are one
+   surface's palette and not the brand's. */
+.alaap-app {
+  --app-ground: #f3f0ea;
+  --app-rail: #f7f5f0;
+  --app-card: #fbfaf6;
+  --app-sunken: #f3f0ea;
+  --app-stone: #eae7df;
+  --app-edge: rgb(26 24 20 / 0.09);
+  --app-edge-strong: rgb(26 24 20 / 0.16);
+
+  --app-ink: #1a1814;
+  --app-body: #413b34;
+  --app-muted: #57514a;
+  --app-faint: #7a736a;
+  --app-label: #8d867b;
+  --app-dim: #a49c90;
+
+  --app-gold: #c08a2e;
+  --app-gold-lit: #e0ac5c;
+  --app-gold-ink: #8a5a12;
+
+  /* the one dark mass on the page — the instrument the three metrics live in */
+  --app-dark: linear-gradient(158deg, #26221d, #151311);
+  --app-on-dark: #f4f1ea;
+  --app-on-dark-dim: #9c948a;
+  --app-on-dark-soft: #b8b0a4;
+  --app-on-dark-line: rgb(244 241 234 / 0.12);
+  --app-on-dark-fill: rgb(244 241 234 / 0.08);
+}
+
+/* Whichever region is doing the scrolling keeps a thin, unpainted scrollbar,
+   so the card stack never gains a chrome-coloured gutter down its edge. */
+.app-main,
+.app-work {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(26 24 20 / 0.18) transparent;
+  overscroll-behavior: contain;
+}
+
+.app-main::-webkit-scrollbar,
+.app-work::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-main::-webkit-scrollbar-track,
+.app-work::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-main::-webkit-scrollbar-thumb,
+.app-work::-webkit-scrollbar-thumb {
+  background: rgb(26 24 20 / 0.18);
+  border-radius: 999px;
+}
+
+/* ---- the dashboard's three shapes ---------------------------------------
+   Desktop and laptop: two columns. The sculpture holds a still column at
+   full height and never scrolls, so the object stays whole while the work
+   moves beside it — that split is the whole idea of the screen.
+
+   Under 1120 there is no longer a column narrow enough to hold a standing
+   figure and wide enough to leave room beside it, so the sculpture turns on
+   its side into a banner, the working column takes the full width, and the
+   page scrolls as one document instead of two panes.
+
+   Under 640 the figure gets shorter again and the rail moves to the bottom
+   of the screen, where a thumb is.
+   ------------------------------------------------------------------------ */
+.app-dash {
+  display: grid;
+  gap: 12px;
+}
+
+.app-sculpt {
+  position: relative;
+  height: clamp(164px, 27vw, 208px);
+  border-radius: 20px;
+  overflow: hidden;
+  isolation: isolate;
+  /* Only ever seen while the crop is still loading — it covers the panel. */
+  background: #efece5;
+  border: 1px solid rgb(26 24 20 / 0.07);
+}
+
+/* Lying down: the figure sits at the left of the band and the ground to its
+   right is empty, which is where the day's summary goes. */
+.app-sculpt-figure {
+  position: absolute;
+  inset: 0;
+  background-image: url('/media/sculpture-wide-sm.webp');
+  background-image: image-set(
+    url('/media/sculpture-wide-sm.webp') 1x,
+    url('/media/sculpture-wide.webp') 2x
+  );
+  background-size: cover;
+  background-position: left center;
+  background-repeat: no-repeat;
+}
+
+/* The summary sits under the figure on a phone, and beside it on anything
+   wide enough that the banner has empty ground to the right of the hands. */
+.app-sculpt-card {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+}
+
+@media (min-width: 560px) {
+  .app-sculpt-card {
+    left: auto;
+    right: 16px;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    width: min(46%, 380px);
+  }
+}
+
+/* Where the scrolling happens moves up one level at each step. On a phone the
+   document scrolls. From 640 the shell is pinned to the viewport beside the
+   rail, so the content pane scrolls inside it. From 1120 the pane is split and
+   only the working column moves, which is what holds the sculpture still. */
+@media (min-width: 640px) {
+  .app-main {
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+  }
+}
+
+@media (min-width: 1120px) {
+  /* Only the dashboard splits into two panes, and only it stops the content
+     area scrolling — the working column does that instead, which is what
+     holds the sculpture still. The other three tabs are one full-width
+     document and keep the scroll they had at 640. */
+  .app-main--split {
+    overflow: hidden;
+  }
+
+  /* A third of the screen, at every desktop and laptop width — measured off
+     the viewport rather than the grid, so the figure holds the same share of
+     the display whether that is 1120px or 2560px. The working column takes
+     what is left, which is never less than about 620px. */
+  .app-dash {
+    grid-template-columns: 33.333vw minmax(0, 1fr);
+    gap: 16px;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .app-sculpt {
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* Standing: the figure fills the panel, as the design has it.
+
+     A third of the screen wide by the full height tall is not one aspect
+     ratio — it runs from about 0.41 on a restored window or a 4:3 monitor to
+     0.81 on an ultrawide, and `cover` trims whichever axis the crop is
+     narrower on. The crop is cut at 0.50 with a sixteenth of its width as
+     ground on each side of the figure, which puts the desktop band above it:
+     every panel wider than 0.44 trims the top and the foot only, and the
+     hands are never reached. The figure sits high in the frame — 21% headroom
+     above the head — so that the trim comes out of empty ground and the whole
+     lower body stays in shot down to where the render's own fade ends. */
+  .app-sculpt-figure {
+    background-image: url('/media/sculpture-portrait-sm.webp');
+    background-image: image-set(
+      url('/media/sculpture-portrait-sm.webp') 1x,
+      url('/media/sculpture-portrait.webp') 2x
+    );
+    background-position: center;
+  }
+
+  .app-sculpt-card {
+    left: 16px;
+    right: 16px;
+    top: auto;
+    bottom: 16px;
+    width: auto;
+    transform: none;
+  }
+
+  .app-work {
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    padding-right: 4px;
+  }
+}
+
+/* ---- the community workspace --------------------------------------------
+   Phone and tablet get one column in a 940px measure — the shape this screen
+   already had, and the right one when there is only ever room for a single
+   thing at a time.
+
+   From 1120 it opens into three zones and takes the whole window. What it
+   does NOT do is let the text get wider: the guidance is a 65-75ch measure
+   for anything read as prose, so a post stretched across a 1920px monitor
+   would be a regression dressed up as a redesign. The extra width goes to a
+   standing section list on the left and a context rail on the right, and to
+   putting card grids two and three up — more content in view, not longer
+   lines. The shell is capped so that on a very large display the three zones
+   stay a readable set rather than drifting apart.
+   ------------------------------------------------------------------------ */
+
+.cm-shell {
+  width: 100%;
+  max-width: 940px;
+  margin-inline: auto;
+}
+
+/* The measure is the column, not a cap inside it.
+
+   There used to be a `.cm-prose` clamp of 31em on every paragraph in here. It
+   was aimed at the right thing — a post stretched across a 1920px monitor is
+   a regression — but it did the job in the wrong place: on a 1280px laptop it
+   was throwing away 54px of a 490px card, so every line broke early inside a
+   box that plainly had room for it. The column widths below are what hold the
+   measure now, and a paragraph fills whatever card it is given. */
+
+@media (min-width: 1120px) {
+  .cm-shell {
+    display: grid;
+    /* The flanks take what they need and no more — the middle is the thing
+       somebody came here for, so it gets the width first and the rails get the
+       rest. 224 is the width at which the longest section name ("Say it
+       anonymously") and its count sit on one line; below that the card grows a
+       second line and stops matching the other three. */
+    grid-template-columns: 224px minmax(0, 1fr) minmax(276px, 300px);
+    gap: 20px;
+    align-items: start;
+    max-width: 1560px;
+  }
+
+  /* Both flanks stand still while the middle scrolls. They are capped to the
+     viewport and scroll internally, so a long rail can never trap content
+     below the fold with no way to reach it. */
+  .cm-nav,
+  .cm-rail {
+    position: sticky;
+    top: 0;
+    max-height: calc(100svh - 2.5rem);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+}
+
+/* ---- the courtyard ------------------------------------------------------
+   The community tab is warmer than the rest of the signed-in surface, and
+   deliberately so: it is the one screen where the member is writing to other
+   people rather than reading their own record back. The paper is a shade
+   further from white, the cards carry a soft drop rather than a flat edge,
+   and there are three colours the dashboard does not own — the green of a
+   held lantern, the rust of a safety read, and the tinted band that tells one
+   circle from another.
+
+   Scoped to `.cm-courtyard` rather than added to `.alaap-app`, so the
+   dashboard's palette is untouched and these cannot leak into it.
+   ------------------------------------------------------------------------ */
+
+.cm-courtyard {
+  --cm-paper: #fffcf5;
+  --cm-sunken: #f7f3e9;
+  --cm-stone: #ede8dc;
+  --cm-edge: rgb(27 23 18 / 0.1);
+  --cm-edge-strong: rgb(27 23 18 / 0.16);
+
+  /* holding a lantern is the one affirmative gesture on the tab */
+  --cm-hold: #dce4d4;
+  --cm-hold-ink: #3e4b39;
+  --cm-live: #6f8a6b;
+
+  /* the safety read. Rust, not red — it is asking for a rewrite, not
+     refusing the person. */
+  --cm-alert: #a8481c;
+  --cm-alert-ink: #8c3d18;
+  --cm-alert-bg: #fbf0e8;
+  --cm-alert-edge: #e8c4ae;
+
+  --cm-gold-wash: #f7ebce;
+  --cm-gold-edge: #e0c994;
+
+  --cm-lift: 0 2px 12px rgb(27 23 18 / 0.05);
+  --cm-lift-strong: 0 8px 20px rgb(27 23 18 / 0.18);
+}
+
+/* ---- the group room -----------------------------------------------------
+   Group care is the one part of the signed-in surface where the member is in
+   a room with other people at a fixed hour, and it is coloured for it: paper
+   a shade brighter than the dashboard's, a sand field for anything sunk into
+   a card, and two accents the rest of the app does not own.
+
+   Terracotta is the therapist, a thing that is due, and a session that is
+   live — attention, never alarm, which is why it is a clay rather than a red.
+   Green is done, open, and present. Nothing here is ever a grade, so neither
+   colour is used to say good or bad about a person.
+
+   Written in oklch rather than hex because the seven member seat colours are
+   one ramp — the same lightness and chroma at seven hue angles — and these
+   two accents sit on that ramp deliberately. In hex the relationship is
+   invisible and the next person to touch it would break it by eye.
+
+   Scoped to `.gr-room` for the same reason `.cm-courtyard` is scoped: it is
+   one surface's palette, not the brand's, and it must not leak.
+   ------------------------------------------------------------------------ */
+
+.gr-room {
+  /* The one face the rest of the app does not use. Group care is the only
+     place a member sits in a room with other people at a fixed hour, and the
+     screens are mostly somebody's words — a therapist's note, the week's
+     question, the name of what the group is for. Outfit sets those as
+     interface labels; a text serif sets them as things a person said, which
+     is what they are. Scoped here so the dashboard is untouched. */
+  --gr-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+
+  --gr-paper: oklch(0.995 0.005 85);
+  --gr-sand: oklch(0.945 0.018 76);
+  --gr-line: oklch(0.3 0.02 55 / 0.08);
+  --gr-line-strong: oklch(0.3 0.02 55 / 0.18);
+  --gr-lift: 0 1px 3px oklch(0.3 0.02 55 / 0.06);
+
+  --gr-terra: oklch(0.6 0.12 42);
+  --gr-terra-ink: oklch(0.53 0.13 40);
+  --gr-terra-wash: oklch(0.6 0.12 42 / 0.09);
+  --gr-terra-edge: oklch(0.6 0.12 42 / 0.4);
+  --gr-terra-ring: oklch(0.6 0.12 42 / 0.3);
+
+  --gr-green: oklch(0.58 0.09 150);
+  --gr-green-wash: oklch(0.6 0.09 150 / 0.22);
+
+  /* the seat left behind when someone moves to the middle */
+  --gr-hollow: oklch(0.3 0.02 55 / 0.05);
+}
+
+/* The tab keeps its own measure. The seven screens were composed at 1240 and
+   several of them are three zones across, so centring them in the dashboard's
+   940px reading column would fold every one of them at a width where there is
+   plainly room. */
+.gr-shell {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+}
+
+/* The live session is the only screen here that is a window rather than a
+   document: a fixed set of zones that all have to be in view at once, because
+   the point of it is that you can see the whole room while you talk.
+
+   The split is by how much of the hour each thing is worth looking at. The
+   circle is half the window, because the group is the interface and everything
+   else on this screen is in service of it. The camera and the tasks share a
+   quarter, an eighth each — the camera because one face at a time is all
+   anyone can attend to, the tasks because they are a reference you glance at
+   rather than read. The chat takes the last quarter and full height, because
+   it is a column of text and a short wide box would show two lines of it.
+
+   Below 1100 there is no honest way to hold three columns, so it becomes one
+   and the circle still leads — the same priority order, stacked. */
+.gr-stage {
+  display: grid;
+  gap: 0;
+}
+
+@media (min-width: 1100px) {
+  .gr-stage {
+    grid-template-columns: 2fr 1fr 1fr;
+    min-height: 640px;
+  }
+}
+
+/* The circle's slot. Made a size container so the circle can be sized from
+   the space it actually has rather than from the window — the window is the
+   wrong unit here, because how much of it the circle gets depends on the
+   question above and the note below, which are different heights on different
+   screens. Anything based on `vh` either overflows on a short window or
+   leaves the circle small on a tall one. Container units are resolved during
+   layout, so unlike a ResizeObserver this needs no frames to be produced. */
+.gr-ring-slot {
+  container-type: size;
+}
+
+/* The middle quarter, halved: camera over tasks. */
+.gr-stage-mid {
+  display: grid;
+  grid-template-rows: auto auto;
+  min-height: 0;
+}
+
+@media (min-width: 1100px) {
+  .gr-stage-mid {
+    grid-template-rows: 1fr 1fr;
+  }
+}
+
+/* Joined, the session stops being a card on a page and takes the window. It
+   is the one screen here that is a place rather than a document: for ninety
+   minutes there is nothing else to be doing, and a dashboard visible around
+   the edges invites you to go and do it. */
+.gr-session-full {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-ground);
+}
+
+.gr-session-full .gr-stage {
+  flex: 1;
+  min-height: 0;
+}
+
+@media (min-width: 1100px) {
+  .gr-session-full .gr-stage {
+    min-height: 0;
+  }
+}
+
+/* Each zone scrolls inside itself, so the header and the circle stay put
+   however long the chat gets. The middle column is two zones and manages its
+   own rows, so it is excluded. */
+.gr-session-full .gr-stage > *:not(.gr-stage-mid) {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.gr-session-full .gr-stage-mid > * {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Stacked, the four zones cannot all be on screen at once, and dividing one
+   screen between them gives four things too short to use. So the narrow case
+   stops pretending to be a window and scrolls as a document — the circle
+   still first, at a height it is legible at. */
+@media (max-width: 1099px) {
+  .gr-session-full .gr-stage {
+    overflow-y: auto;
+  }
+
+  /* The zones take their content's height rather than a share of one screen —
+     `min-height: 0` above is what lets them be squeezed, and squeezed is the
+     wrong answer once they are stacked. */
+  .gr-session-full .gr-stage > *:not(.gr-stage-mid),
+  .gr-session-full .gr-stage-mid > * {
+    overflow-y: visible;
+    min-height: auto;
+  }
+
+  .gr-session-full .gr-stage-mid {
+    min-height: auto;
+  }
+
+  .gr-session-full .gr-stage > :first-child {
+    min-height: 70vh;
+  }
+
+  /* Stacked, the camera has no column height to fill, so it takes a shape of
+     its own instead of stretching to whatever is left. */
+  .gr-session-full .gr-video-tile {
+    flex: none;
+    aspect-ratio: 16 / 10;
+    max-height: 42vh;
+  }
+}
+
+/* The speaker's level. Each bar runs on its own duration and its own delay,
+   so the row reads as a voice rather than a row of things going up and down
+   together — speech is uneven, and an even meter looks like a loading bar.
+   The peak, the period and the offset all come from the element. */
+@keyframes grTalk {
+  0%,
+  100% {
+    height: 16%;
+  }
+  50% {
+    height: var(--peak);
+  }
+}
+
+.gr-bar {
+  animation: grTalk var(--dur) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+/* Asked for less movement, the bars simply stand at their peak: the shape of
+   a voice, held still. */
+@media (prefers-reduced-motion: reduce) {
+  .gr-bar {
+    animation: none;
+    height: var(--peak);
+  }
+}
+
+/* The live dot on a session in progress. One slow pulse — it is telling you
+   the room is open, not asking you to hurry. */
+@keyframes grLive {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.gr-live-dot {
+  animation: grLive 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-live-dot {
+    animation: none;
+  }
+}
+
+/* ---- the register on Yours ----------------------------------------------
+   A five-column table where there is room and a stacked block where there is
+   not. The switch is measured on the card itself, not the window: this card is
+   the full width of the reading column on one screen and half of it on the
+   next, so a viewport breakpoint would get it wrong in both directions. */
+
+/* The four section cards stand as a set, so they are one grid with equal rows
+   rather than four independently sized buttons. A name that needs two lines
+   then makes every card taller instead of making one card odd. */
+@media (min-width: 1120px) {
+  .cm-navlist {
+    display: grid;
+    grid-auto-rows: 1fr;
+    gap: 6px;
+  }
+
+  .cm-navlist > li {
+    display: grid;
+  }
+}
+
+.cm-rows {
+  container-type: inline-size;
+}
+
+/* Narrow: the post takes its own line and everything that describes it wraps
+   onto a second one, with the action pushed to the end. It is a row, not a
+   table with its columns knocked over. */
+.cm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.cm-row > :first-child {
+  flex: 1 1 100%;
+}
+
+.cm-row > :last-child {
+  margin-inline-start: auto;
+}
+
+.cm-rowhead {
+  display: none;
+}
+
+@container (min-width: 680px) {
+  .cm-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 84px 88px 148px 128px;
+    gap: 18px;
+    align-items: center;
+  }
+
+  /* The doorway register carries four columns rather than five — a circle,
+     how many are waiting, how long the one at the front has waited, and the
+     way in. Same shape and the same switch, with one thing fewer to say. */
+  .cm-row--door {
+    grid-template-columns: minmax(0, 1fr) 136px 116px 160px;
+  }
+
+  .cm-row > :first-child,
+  .cm-row > :last-child {
+    flex: none;
+    margin-inline-start: 0;
+  }
+
+  .cm-rowhead {
+    display: grid;
+  }
+}
+
+/* Replies fold out rather than appear. 8px and 200ms: enough to say where the
+   row came from, not enough to make somebody wait for it. */
+@keyframes cm-rise {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* The presence light. Slow enough to read as breathing rather than blinking —
+   nothing on this tab is asking to be looked at. */
+@keyframes cm-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes cm-held {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.cm-rise {
+  animation: cm-rise 0.22s ease both;
+}
+
+.cm-breathe {
+  animation: cm-breathe 2.8s ease-in-out infinite;
+}
+
+.cm-held {
+  animation: cm-held 0.35s ease;
+}
+
+/* Motion here is decoration on top of a layout that already reads. Somebody
+   who has asked the system for less of it loses nothing by having none. */
+@media (prefers-reduced-motion: reduce) {
+  .cm-rise,
+  .cm-breathe,
+  .cm-held {
+    animation: none;
+  }
+}
+
+/* Past about 1800px a third of the screen is wider than the small crop, so the
+   full one becomes the 1x source too rather than being upscaled. */
+
+@media (min-width: 1800px) {
+  .app-sculpt-figure {
+    background-image: url('/media/sculpture-portrait.webp');
+  }
+}
+
+/* Card fields size themselves off the space they are given rather than off a
+   breakpoint, so three-up becomes two-up becomes one-up on its own — the same
+   grid serves the desktop column and the full-width tablet page. */
+.app-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(238px, 100%), 1fr));
+  gap: 12px;
+}
+
+/* ---- everything under the chart ------------------------------------------
+   An even row of four gave the composer and the feed the same weight as a
+   three-line checklist, which is not what they are worth: one is where you
+   write and the other is what came back. So the field below the chart is
+   deliberately uneven — the two that carry writing take two thirds and a
+   double height, and the three that only report take what is left beside
+   them. It reads as an editorial page rather than a dashboard of tiles.
+
+   It is measured against the working column itself, not the window, because
+   that column is half the screen on a desktop and all of it on a tablet. */
+.app-work {
+  container-type: inline-size;
+  container-name: work;
+}
+
+.app-spread {
+  display: grid;
+  gap: 12px;
+}
+
+/* The first rail icon sits on the same line as the wordmark and the date
+   across the top of the sculpture panel. Getting there is arithmetic, not a
+   round number: the panel starts 16px down, its overlay another 16px, and
+   the icon's centre is 22px into a 44px target — so the rail's top padding
+   is 10px plus half the wordmark, which scales with the viewport on the same
+   clamp the wordmark uses. */
+@media (min-width: 640px) {
+  .app-rail {
+    padding-top: calc(10px + clamp(10.8px, 0.95vw, 16px));
+  }
+}
+
+@container work (min-width: 560px) {
+  .app-spread {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .sp-8 {
+    grid-column: span 8;
+  }
+  .sp-7 {
+    grid-column: span 7;
+  }
+  .sp-5 {
+    grid-column: span 5;
+  }
+  .sp-4 {
+    grid-column: span 4;
+  }
+  .sp-tall {
+    grid-row: span 2;
+  }
+}
+
+/* The price re-animates when the Care Access toggle changes it, so the number
+   itself acknowledges the switch rather than swapping silently. */
+@keyframes priceIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.32em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

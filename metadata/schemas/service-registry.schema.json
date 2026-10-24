@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alaap.platform/schemas/service-registry.schema.json",
+  "title": "Service registry",
+  "description": "Validates metadata/api/service-registry.v1.yaml. Declares the backend services, the deployable each runs in, the API groups it serves and the tables it owns. Vault permissions live in the vault access matrix, not here.",
+  "type": "object",
+  "required": ["version", "deployables", "services"],
+  "additionalProperties": false,
+
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "deployables": {
+      "type": "object",
+      "description": "Deployable name to a one-line description of what runs in it.",
+      "required": ["core", "identity-isolate", "ai-tier"],
+      "additionalProperties": false,
+      "properties": {
+        "core": { "type": "string", "minLength": 1 },
+        "identity-isolate": { "type": "string", "minLength": 1 },
+        "ai-tier": { "type": "string", "minLength": 1 }
+      }
+    },
+    "services": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/service" }
+    }
+  },
+
+  "definitions": {
+    "service": {
+      "type": "object",
+      "required": ["id", "deployable", "api_groups", "owns"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "deployable": { "enum": ["core", "identity-isolate", "ai-tier"] },
+        "api_groups": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Route prefixes this service serves through the gateway. An empty array means internal-only — never routed to the frontend.",
+          "items": {
+            "type": "string",
+            "pattern": "^(\\*|/api/[a-z0-9]+(-[a-z0-9]+)*)$"
+          }
+        },
+        "owns": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Tables owned by this service. A table has exactly one owner across the whole registry; services do not read each other's tables.",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
+        },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,82 @@
+# Community categories
+#
+# The topic a member picks when they post. Not a diagnosis, and deliberately not
+# anything that could be read as one.
+#
+# WHY THESE ARE SITUATIONS AND NOT CONDITIONS
+#
+# A list like "Depression / Anxiety / OCD" asks a person to diagnose themselves before
+# they are allowed to speak, and then labels their post with the answer. Most people
+# arriving here do not have a diagnosis, many who do would not choose to lead with it,
+# and none of them owe the platform one in order to say what happened today.
+#
+# So the list describes CIRCUMSTANCES — what is going on — which is what somebody can
+# answer without a clinician, and what another member can recognise in themselves.
+# `everything-else` exists so that nobody is ever stuck at the first screen because
+# their life does not fit a box.
+#
+# NOT the same thing as the A1 moderation categories in metadata/moderation/. Those
+# describe what a REPLY may not do. These describe what a POST is about, are chosen by
+# the member, and gate nothing.
+#
+# ORDER is display order, and it is not alphabetical. `something-good` sits high on
+# purpose: a feed of a mental health community that is uniformly bleak teaches new
+# arrivals that good news is unwelcome here, and it is the posts about a small win
+# that make the place survivable for the people replying.
+#
+# Validated by: metadata/schemas/community-categories.schema.json
+
+version: 1
+
+categories:
+  - id: just-today
+    label: Just today
+    blurb: Something that happened, or did not. No larger point needed.
+
+  - id: study-and-exams
+    label: Study and exams
+    blurb: School, college, entrance exams, results, the year off.
+
+  - id: work-and-career
+    label: Work and career
+    blurb: The job, the search for one, the manager, the decision to leave.
+
+  - id: family
+    label: Family
+    blurb: Parents, siblings, in-laws, the house you grew up in.
+
+  - id: relationships
+    label: Relationships
+    blurb: Partners, marriage, breakups, the ones that did not begin.
+
+  - id: friendship-and-loneliness
+    label: Friendship and loneliness
+    blurb: Having people, not having them, or having them and still being alone.
+
+  - id: money
+    label: Money
+    blurb: Debt, rent, supporting people, the arithmetic that does not work.
+
+  - id: health
+    label: Health
+    blurb: Your own or someone else's. Appointments, waiting, living with it.
+
+  - id: sleep-and-rest
+    label: Sleep and rest
+    blurb: Nights that do not end, and days spent recovering from them.
+
+  - id: identity-and-belonging
+    label: Identity and belonging
+    blurb: Who you are, where you are from, where you fit.
+
+  - id: loss
+    label: Loss
+    blurb: A person, a place, a version of your life. Recent or not.
+
+  - id: something-good
+    label: Something good
+    blurb: A small win, a better week, a thing that worked. It counts.
+
+  - id: everything-else
+    label: Everything else
+    blurb: For when none of the above is it.

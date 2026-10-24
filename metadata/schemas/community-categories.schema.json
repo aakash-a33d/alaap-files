@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alaap.in/schemas/community-categories.schema.json",
+  "title": "Community categories",
+  "description": "The topic a member picks when posting. Situations, never diagnoses — a list of conditions would ask a person to diagnose themselves before they are allowed to speak. Seeded into community_categories by scripts/db/migrate.mjs; there is no second copy in code.",
+  "type": "object",
+  "required": ["version", "categories"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "categories": {
+      "type": "array",
+      "minItems": 3,
+      "description": "Array order is display order. Must contain a catch-all so nobody is stuck at the first screen because their life does not fit a box.",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "blurb"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{1,38}[a-z0-9]$",
+            "description": "Stable key. Referenced by community_posts.category_id, so renaming one orphans existing posts."
+          },
+          "label": { "type": "string", "minLength": 2, "maxLength": 40 },
+          "blurb": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 120,
+            "description": "One line under the label. Written to a person choosing where to put something difficult, not as marketing."
+          },
+          "active": {
+            "type": "boolean",
+            "default": true,
+            "description": "False retires a category from the picker without orphaning the posts already filed under it."
+          }
+        }
+      }
+    }
+  }
+}

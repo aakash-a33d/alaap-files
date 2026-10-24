@@ -1,0 +1,204 @@
+# Purpose registry
+#
+# Every request handler that reads protected data declares a purpose string from this
+# file (folder-structure rule 3). CI rejects a handler declaring a purpose not
+# registered here, and the consent engine evaluates the declared purpose against the
+# consent scope attached to each record.
+#
+# A purpose is not a description of the code. It is the reason a person's data is
+# being touched, in words that could be shown to that person.
+#
+# Reasoning: docs/backend/backend-requirements.md
+# Validated by: metadata/schemas/purpose-registry.schema.json
+
+version: 1
+
+purposes:
+
+  - id: community-moderation
+    label: Checking a post or reply for safety
+    vaults: [community]
+    consent: not-required
+    basis: legitimate-safety
+    ai_permitted: true
+    note: >-
+      Publication is conditional on this check, so it is not consent-optional. Users
+      are told moderation happens before they post; §12D makes it a stated term of
+      community participation rather than a consent choice.
+
+  - id: crisis-triage
+    label: Detecting signs of serious distress
+    vaults: [community, clinical]
+    consent: not-required
+    basis: vital-interest
+    ai_permitted: true
+    note: >-
+      Detection only. Acting on a signal — contacting anyone — requires the separate
+      emergency-contact-disclosure purpose and an approved break-glass case.
+
+  - id: therapist-session-prep
+    label: Preparing your therapist for your session
+    vaults: [clinical]
+    consent: explicit
+    basis: consent
+    ai_permitted: true
+    withdrawable: true
+
+  - id: therapist-insight-generation
+    label: Creating a summary from records you chose to share
+    vaults: [clinical]
+    consent: explicit
+    basis: consent
+    ai_permitted: true
+    withdrawable: true
+    note: >-
+      Scoped to records the user selected. Never applies to Maximum Privacy Mode
+      records, which the platform cannot decrypt.
+
+  - id: group-session-summary
+    label: Summarising a group session
+    vaults: [clinical]
+    consent: explicit
+    basis: consent
+    ai_permitted: true
+    withdrawable: true
+    note: Requires group-level and individual-level consent, per §8.3.
+
+  - id: session-transcription
+    label: Transcribing a session you chose to record
+    vaults: [clinical]
+    consent: explicit
+    basis: consent
+    ai_permitted: true
+    withdrawable: true
+    note: >-
+      Recorded Review Session only. Taps pre-mask audio, which the consent text must
+      state plainly. Audio is streamed and never persisted.
+
+  - id: care-delivery
+    label: Running your appointments and care plan
+    vaults: [clinical, billing]
+    consent: implied-by-service
+    basis: contract
+    ai_permitted: false
+
+  - id: care-verification
+    label: Confirming eligibility for professional care
+    vaults: [identity]
+    consent: explicit
+    basis: contract
+    ai_permitted: false
+    withdrawable: true
+    note: >-
+      Tier 2. Collects a first name for the therapist to address the person by, and an
+      optional emergency contact. Collects NO government ID — that is tier 4, subsidy
+      only. Withdrawal ends access to group and one-to-one care, and the user must be
+      told that before they withdraw.
+
+  - id: medical-identity-verification
+    label: Verifying your identity for a psychiatry consultation
+    vaults: [identity]
+    consent: explicit
+    basis: legal-obligation
+    ai_permitted: false
+    withdrawable: false
+    note: >-
+      Tier 3, psychiatrists only. Required of a Registered Medical Practitioner by the
+      Telemedicine Practice Guidelines 2020; it does not attach to counsellors or
+      clinical psychologists. Not withdrawable while a medical care relationship is
+      active, because the record obligation outlives the consultation.
+
+  - id: billing-subscription
+    label: Taking payment for your plan
+    vaults: [billing]
+    consent: implied-by-service
+    basis: contract
+    ai_permitted: false
+
+  - id: subsidy-eligibility
+    label: Checking whether you qualify for subsidised care
+    vaults: [identity, billing]
+    consent: explicit
+    basis: consent
+    ai_permitted: false
+    withdrawable: true
+
+  - id: therapist-payout
+    label: Paying a therapist for delivered sessions
+    vaults: [billing]
+    consent: not-required
+    basis: contract
+    ai_permitted: false
+
+  - id: emergency-contact-disclosure
+    label: Releasing emergency contact details during a serious risk case
+    vaults: [identity]
+    consent: override
+    basis: vital-interest
+    ai_permitted: false
+    note: >-
+      The only purpose that proceeds against a user's stated preference. Requires an
+      open high-risk case, two human approvals, threshold key shares, a reason code
+      and a time-limited window. Releases minimum necessary fields only.
+
+  - id: notification-delivery
+    label: Sending you a message about your account
+    vaults: [identity]
+    consent: implied-by-service
+    basis: contract
+    ai_permitted: false
+    note: Delivery address and template id only. Never record content.
+
+  - id: data-export
+    label: Giving you a copy of your data
+    vaults: [identity, community, clinical, billing]
+    consent: explicit
+    basis: data-subject-right
+    ai_permitted: false
+    withdrawable: true
+    note: An export can be cancelled until the archive is generated.
+
+  - id: data-deletion
+    label: Deleting data at your request
+    vaults: [identity, community, clinical, billing]
+    consent: explicit
+    basis: data-subject-right
+    ai_permitted: false
+    withdrawable: false
+    note: >-
+      Cancellable during the grace period before the purge begins, but not withdrawable
+      once executed. The interface must state that plainly before confirmation.
+
+  - id: retention-expiry
+    label: Removing data whose retention period has ended
+    vaults: [identity, community, clinical, billing]
+    consent: not-required
+    basis: legal-obligation
+    ai_permitted: false
+
+  - id: security-investigation
+    label: Investigating abuse, fraud or a security incident
+    vaults: [community, billing]
+    consent: not-required
+    basis: legitimate-safety
+    ai_permitted: true
+    note: >-
+      Does not reach clinical records. A security investigation that appears to need
+      therapy content requires a separate documented approval.
+
+  - id: audit-review
+    label: Reviewing who accessed what
+    vaults: [audit]
+    consent: not-required
+    basis: legal-obligation
+    ai_permitted: false
+
+  - id: account-recovery
+    label: Restoring access to your account
+    vaults: [identity]
+    consent: implied-by-service
+    basis: contract
+    ai_permitted: false
+    note: >-
+      Cannot recover Maximum Privacy Mode records. The key is held on the user's
+      device and the platform has no copy.

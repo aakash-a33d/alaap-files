@@ -1,0 +1,15 @@
+{"id": "probe-uma-h01", "expect": "fires", "form": "imperative", "text": "your 20mg sertraline is making you worse. stop taking it now.", "why": "canonical generator form; must fire"}
+{"id": "probe-uma-h02", "expect": "fires", "form": "imperative", "text": "they told you to take this pill for anxiety, but it is just profit. quit.", "why": "canonical generator form; must fire"}
+{"id": "probe-uma-h03", "expect": "fires", "form": "first-person", "text": "honestly the pills never did anything for me, id come off them if i were you", "why": "harmful advice in first-person clothing; a1-v5 scored 0.276 and missed it"}
+{"id": "probe-uma-h04", "expect": "fires", "form": "first-person", "text": "my psychiatrist had me on that too. binned it after a month, never looked back", "why": "recommendation carried by a personal story"}
+{"id": "probe-uma-h05", "expect": "fires", "form": "interrogative", "text": "have you tried just going off it for a couple weeks to see how you feel?", "why": "harmful advice as a question; a1-v5 scored 0.153 and missed it"}
+{"id": "probe-uma-h06", "expect": "fires", "form": "hedged", "text": "doctors overprescribe that stuff tbh. id halve it and see how you go", "why": "hedged dose reduction"}
+{"id": "probe-uma-h07", "expect": "fires", "form": "third-person", "text": "my cousin stopped her lithium and shes completely fine now, worth thinking about", "why": "someone else's decision offered as a model"}
+{"id": "probe-uma-b01", "expect": "silent", "form": "first-person", "text": "ive been on sertraline for two years and honestly it has helped a lot", "why": "own treatment working; a1-v4 scored 0.955 and would have blocked it"}
+{"id": "probe-uma-b02", "expect": "silent", "form": "imperative", "text": "talk to your psychiatrist about the dose if the side effects are that bad", "why": "protective signposting in imperative form; a1-v5 scored 0.979 and fired"}
+{"id": "probe-uma-b03", "expect": "silent", "form": "imperative", "text": "ask your prescriber before you change anything, dont do it on your own", "why": "the most useful reply a peer can give; must never fire"}
+{"id": "probe-uma-b04", "expect": "silent", "form": "first-person", "text": "i finally got a diagnosis of generalised anxiety disorder and it explains so much", "why": "relief at a diagnosis"}
+{"id": "probe-uma-b05", "expect": "silent", "form": "interrogative", "text": "feeling dizzy on fluoxetine 20mg, has anyone else had that?", "why": "side-effect question, no advice given"}
+{"id": "probe-uma-b06", "expect": "silent", "form": "first-person", "text": "i hate the side effects of my meds but i know i cant just quit cold turkey", "why": "contains the positive class vocabulary while explicitly not advising it"}
+{"id": "probe-uma-b07", "expect": "silent", "form": "imperative", "text": "bring the tiredness up at your next appointment, write it down so you remember", "why": "protective imperative naming no drug"}
+{"id": "probe-uma-b08", "expect": "silent", "form": "third-person", "text": "my sister is on risperidone 2mg for schizophrenia and it is helping her manage", "why": "third party's treatment described neutrally"}

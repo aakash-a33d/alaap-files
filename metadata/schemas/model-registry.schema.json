@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alaap.platform/schemas/model-registry.schema.json",
+  "title": "AI model registry",
+  "description": "Validates metadata/ai/model-registry/*.yaml. Every model the platform runs is declared here; services read the registry rather than hardcoding checkpoints, precisions or budgets.",
+  "type": "object",
+  "required": ["version", "status", "models"],
+  "additionalProperties": false,
+
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "status": { "enum": ["mvp", "draft", "superseded"] },
+    "models": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/model" }
+    },
+    "excluded": {
+      "type": "array",
+      "description": "Rejected models and approaches, recorded so they are not re-proposed.",
+      "items": { "$ref": "#/definitions/exclusion" }
+    }
+  },
+
+  "definitions": {
+    "model": {
+      "type": "object",
+      "required": ["id", "name", "role", "zone", "status", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "kebab-case. Referenced by audit records, so it is immutable once published."
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "role": {
+          "enum": [
+            "classification",
+            "detection",
+            "rules",
+            "base",
+            "adapter",
+            "embedding",
+            "asr",
+            "diarization"
+          ]
+        },
+        "zone": {
+          "description": "AI processing zone. Must match a directory under ai-services/.",
+          "enum": [
+            "orchestrator",
+            "community-moderation",
+            "therapist-insight",
+            "crisis-triage",
+            "security-abuse",
+            "subsidy-fraud",
+            "confidential-processing",
+            "on-device"
+          ]
+        },
+        "status": { "enum": ["mvp", "deferred"] },
+        "path": {
+          "description": "inline gates publication and must meet its latency budget; async is queue-driven; client runs in the browser.",
+          "enum": ["inline", "async", "client"]
+        },
+        "milestone": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "adapter_of": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "Required when role is adapter. Must be the id of a model with role base."
+        },
+        "base": { "$ref": "#/definitions/base" },
+        "training": { "$ref": "#/definitions/training" },
+        "runtime": { "$ref": "#/definitions/runtime" },
+        "outputs": { "$ref": "#/definitions/outputs" },
+        "rules": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "description": "Deterministic detectors, evaluated before any model."
+        },
+        "gates": {
+          "type": "array",
+          "description": "Evaluation suites that must pass before production. See ai-services/evaluation/.",
+          "items": {
+            "enum": [
+              "clinical-safety-en",
+              "clinical-safety-hi",
+              "false-positive-analysis",
+              "language-bias",
+              "over-refusal",
+              "red-team",
+              "clinician-signoff"
+            ]
+          }
+        },
+        "notes": { "type": "string" }
+      },
+
+      "allOf": [
+        {
+          "if": { "properties": { "role": { "const": "adapter" } }, "required": ["role"] },
+          "then": { "required": ["adapter_of"] }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": { "const": "mvp" },
+              "role": { "not": { "const": "adapter" } }
+            },
+            "required": ["status", "role"]
+          },
+          "then": {
+            "required": ["runtime"],
+            "description": "Adapters are exempt: they run on the runtime of the base they attach to."
+          }
+        },
+        {
+          "if": { "properties": { "path": { "const": "inline" }, "status": { "const": "mvp" } }, "required": ["path", "status"] },
+          "then": {
+            "properties": { "runtime": { "required": ["budget_ms"] } },
+            "description": "An inline model gates publication, so it must declare a latency budget."
+          }
+        }
+      ]
+    },
+
+    "base": {
+      "type": "object",
+      "required": ["checkpoint", "licence"],
+      "additionalProperties": false,
+      "properties": {
+        "checkpoint": { "type": "string", "minLength": 1 },
+        "licence": {
+          "description": "Permissive licences only. Non-commercial licences are excluded by policy.",
+          "enum": ["Apache-2.0", "MIT", "BSD-3-Clause", "CC-BY-4.0"]
+        },
+        "parameters": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?[MB]$" }
+      }
+    },
+
+    "training": {
+      "type": "object",
+      "required": ["method"],
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "enum": ["full-fine-tune", "lora", "qlora", "token-classification", "distillation"]
+        },
+        "label_languages": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[a-z]{2}$" }
+        },
+        "transfer": { "enum": ["none", "zero-shot-cross-lingual", "translate-train"] }
+      }
+    },
+
+    "runtime": {
+      "type": "object",
+      "required": ["device"],
+      "additionalProperties": false,
+      "properties": {
+        "device": { "enum": ["cpu", "gpu", "browser"] },
+        "precision": { "enum": ["fp32", "fp16", "bf16", "fp8", "int8", "int4"] },
+        "budget_ms": { "type": "integer", "minimum": 1 },
+        "cpu_fallback": { "type": "boolean" }
+      }
+    },
+
+    "outputs": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["multi-label", "single-label", "span", "text", "vector"] },
+        "categories_ref": {
+          "type": "string",
+          "description": "Path into metadata/ that owns the category list. Categories are never inlined here."
+        },
+        "max_tokens": { "type": "integer", "minimum": 1 }
+      }
+    },
+
+    "exclusion": {
+      "type": "object",
+      "required": ["reason"],
+      "additionalProperties": false,
+      "properties": {
+        "checkpoint": { "type": "string" },
+        "approach": { "type": "string" },
+        "reason": { "type": "string", "minLength": 1 }
+      },
+      "oneOf": [
+        { "required": ["checkpoint"] },
+        { "required": ["approach"] }
+      ]
+    }
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alaap.platform/schemas/plans.schema.json",
+  "title": "Plan catalogue",
+  "description": "Validates metadata/catalog/plans/*.yaml. Prices, entitlements and write quotas. Read by billing-subsidy-service and community-service; never by the gateway, which makes no entitlement decision.",
+  "type": "object",
+  "required": ["version", "currency", "never_gated", "plans", "post_expiry"],
+  "additionalProperties": false,
+
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "currency": { "enum": ["INR"] },
+
+    "never_gated": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/slug" },
+      "description": "Entitlements that no quota, plan, payment state or subsidy state may withhold. A quota restricts writing, never reading, and never the safety path."
+    },
+
+    "plans": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/plan" }
+    },
+
+    "post_expiry": {
+      "type": "object",
+      "required": ["default_days", "archive_on_expiry", "archive_default", "search_indexed"],
+      "additionalProperties": false,
+      "properties": {
+        "default_days": { "type": "integer", "minimum": 1 },
+        "archive_on_expiry": {
+          "enum": ["opt-in", "never"],
+          "description": "opt-in asks the author at the moment of expiry. Opt-out is not an available value — nothing persists without an affirmative choice."
+        },
+        "archive_default": {
+          "const": false,
+          "description": "Fixed. The archive prompt may never be pre-answered yes."
+        },
+        "search_indexed": {
+          "const": "never",
+          "description": "Fixed on every plan. Off-Google is a promise to everyone, not a paid feature."
+        }
+      }
+    }
+  },
+
+  "definitions": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+
+    "nullableCount": {
+      "description": "A non-negative integer, or null meaning unmetered.",
+      "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+    },
+
+    "plan": {
+      "type": "object",
+      "required": ["id", "name", "tier", "price", "quotas", "entitlements"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/slug" },
+        "name": { "type": "string", "minLength": 1 },
+        "tier": { "type": "integer", "minimum": 0, "maximum": 3 },
+
+        "price": {
+          "type": "object",
+          "required": ["standard", "subsidised"],
+          "additionalProperties": false,
+          "properties": {
+            "standard": { "$ref": "#/definitions/price" },
+            "subsidised": { "$ref": "#/definitions/price" }
+          }
+        },
+
+        "quotas": {
+          "type": "object",
+          "required": [
+            "posts_per_month",
+            "replies_written_per_month",
+            "ai_responses_per_post",
+            "post_visibility_days",
+            "journal_entries_per_month",
+            "short_stories_per_month"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "posts_per_month": { "$ref": "#/definitions/nullableCount" },
+            "replies_written_per_month": { "$ref": "#/definitions/nullableCount" },
+            "ai_responses_per_post": { "type": "integer", "minimum": 0 },
+            "post_visibility_days": { "type": "integer", "minimum": 1 },
+            "post_visibility_extendable_to_days": { "$ref": "#/definitions/nullableCount" },
+            "journal_entries_per_month": {
+              "$ref": "#/definitions/nullableCount",
+              "description": "0 means the surface is unavailable on this plan; null means unmetered. The distinction matters — a plan showing 0 must not also claim the `journal` entitlement, and the rule below enforces that."
+            },
+            "short_stories_per_month": { "$ref": "#/definitions/nullableCount" },
+            "group_sessions_per_month": { "$ref": "#/definitions/nullableCount" }
+          },
+          "description": "Write quotas only. There is deliberately no quota governing how many replies an author may READ on their own post — that entitlement is in never_gated and costs nothing to serve."
+        },
+
+        "entitlements": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/slug" }
+        },
+
+        "requires_identity_tier": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "note": { "type": "string" }
+      },
+
+      "allOf": [
+        {
+          "if": {
+            "properties": { "quotas": { "properties": { "journal_entries_per_month": { "const": 0 } }, "required": ["journal_entries_per_month"] } },
+            "required": ["quotas"]
+          },
+          "then": {
+            "properties": { "entitlements": { "not": { "contains": { "const": "journal" } } } },
+            "description": "A plan whose journal quota is 0 must not also list the journal entitlement. The two would contradict each other, and the interface would offer a surface the service then refuses."
+          }
+        },
+        {
+          "if": {
+            "properties": { "quotas": { "properties": { "short_stories_per_month": { "const": 0 } }, "required": ["short_stories_per_month"] } },
+            "required": ["quotas"]
+          },
+          "then": {
+            "properties": { "entitlements": { "not": { "contains": { "const": "short-stories" } } } }
+          }
+        }
+      ]
+    },
+
+    "price": {
+      "anyOf": [
+        { "type": "integer", "minimum": 0 },
+        { "const": "provider-specific" }
+      ]
+    }
+  }
+}
