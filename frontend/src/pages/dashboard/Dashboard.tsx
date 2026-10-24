@@ -16,7 +16,7 @@ import {
   formatSleep,
   monthShape,
   rangeLabels,
-  rangeSpan,
+  rangeWindow,
   type Metric,
   type Range,
 } from '../../content/dashboard'
@@ -210,7 +210,23 @@ const PAD_T = 14
 const SPAN = 160
 
 /**
- * Turn check-ins into one point per day, with gaps where there is no check-in.
+ * A calendar day as the server writes it: YYYY-MM-DD in the member's own timezone.
+ *
+ * Not `toISOString().slice(0, 10)`, which is UTC. `entry_date` is set from the server's
+ * CURRENT_DATE and read as a local day, so east of UTC the two disagree for part of
+ * every night: local midnight on 1 October in IST is 30 September in UTC, and the whole
+ * series would shift back a day. It read correctly only because it was being called
+ * with the current time of day attached, and only when that time was late enough.
+ */
+function localDay(d: Date): string {
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${mm}-${dd}`
+}
+
+/**
+ * Turn check-ins into one point per day across a calendar period, with gaps where
+ * there is no check-in.
  *
  * `null` means "nothing recorded", and it stays null all the way to the path. The
  * chart used to come from `trend()`, which generated a sine wave with seeded noise —
@@ -218,22 +234,24 @@ const SPAN = 160
  * lived. On a platform whose premise is that nothing here is invented about you, a
  * fabricated record of your own moods is the worst kind of placeholder.
  *
+ * The period runs to its own end, not to today, so the days after today are null as
+ * well — not missing readings, just days that have not happened. They draw nothing.
+ *
  * Days are keyed by date rather than by position so a missing day shifts nothing.
  */
 function seriesFrom(
   checkins: MoodCheckin[],
   metric: Metric,
-  days: number,
-  now: Date = new Date(),
+  window: { start: Date; length: number },
 ): (number | null)[] {
   const byDate = new Map<string, (typeof checkins)[number]>()
   for (const c of checkins) byDate.set(c.entryDate.slice(0, 10), c)
 
+  const { start, length } = window
   const out: (number | null)[] = []
-  for (let i = days - 1; i >= 0; i -= 1) {
-    const d = new Date(now)
-    d.setDate(d.getDate() - i)
-    const hit = byDate.get(d.toISOString().slice(0, 10))
+  for (let i = 0; i < length; i += 1) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
+    const hit = byDate.get(localDay(d))
     if (hit === undefined) {
       out.push(null)
       continue
@@ -259,15 +277,17 @@ function seriesFrom(
  * through a day somebody did not record, which is the same lie as inventing a value
  * for it.
  */
-function projectGapped(values: (number | null)[], metric: Metric): string {
+type Pt = { x: number; y: number }
+
+function runsFrom(values: (number | null)[], metric: Metric): Pt[][] {
   const [lo, hi] = SCALE[metric]
   const n = values.length
-  const runs: string[] = []
-  let current: string[] = []
+  const runs: Pt[][] = []
+  let current: Pt[] = []
 
   values.forEach((v, i) => {
     if (v === null) {
-      if (current.length > 0) runs.push(current.join(' L'))
+      if (current.length > 0) runs.push(current)
       current = []
       return
     }
@@ -277,16 +297,25 @@ function projectGapped(values: (number | null)[], metric: Metric): string {
        otherwise be drawn outside the viewBox and clipped by the card, which reads as
        a chart with its top cut off rather than as a value out of range. */
     const t = Math.max(0, Math.min(1, (v - lo) / (hi - lo)))
-    const y = PAD_T + (1 - t) * SPAN
-    current.push(`${x.toFixed(1)},${y.toFixed(1)}`)
+    current.push({ x, y: PAD_T + (1 - t) * SPAN })
   })
-  if (current.length > 0) runs.push(current.join(' L'))
+  if (current.length > 0) runs.push(current)
 
-  /* A run of one gets a zero-length segment so the round linecap renders it as a dot.
-     `M x,y` alone draws nothing, which on the 1st of a month — when the whole span is
-     a single day — would be an empty chart for somebody who had just recorded. */
   return runs
-    .map((r) => (r.includes(' L') ? `M${r}` : `M${r} L${r}`))
+}
+
+const pointsOf = (run: Pt[]) => run.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' L')
+
+function projectGapped(values: (number | null)[], metric: Metric): string {
+  /* A run of one gets a zero-length segment so the round linecap renders it as a dot.
+     `M x,y` alone draws nothing, which on the 1st of a month — when only one day of
+     the period has happened — would be an empty chart for somebody who had just
+     recorded. */
+  return runsFrom(values, metric)
+    .map((run) => {
+      const d = pointsOf(run)
+      return run.length === 1 ? `M${d} L${d}` : `M${d}`
+    })
     .join(' ')
 }
 
@@ -382,16 +411,22 @@ function Instrument({
   loading: boolean
 }) {
   const single: Metric = metric === 'all' ? 'mood' : metric
-  /* Month and year run from the 1st — of the month, of the year — to today, so the
-     span moves with the date and the line never has a stretch of future to its right. */
-  const span = useMemo(() => rangeSpan(range), [range])
-  const series = seriesFrom(history, single, span)
+  /* The whole calendar period — all 28, 29, 30 or 31 days of the month — so the axis is
+     the shape of the month itself. Only the days up to today hold a reading. */
+  const window = useMemo(() => rangeWindow(range), [range])
+  const series = seriesFrom(history, single, window)
   const recorded = series.filter((v): v is number => v !== null)
 
   const line = projectGapped(series, single)
-  // No area fill when the line is broken: a filled region under a gap implies a
-  // reading on a day with none.
-  const area = recorded.length === series.length ? `${line} L${VB_W},${VB_H} L0,${VB_H} Z` : ''
+  /* The fill closes under the run itself, not under the card.
+     No fill when the line is broken: a filled region under a gap implies a reading on
+     a day with none. And it stops where the line stops — closing at the right edge
+     would shade the rest of the month, which nobody has lived yet. */
+  const runs = runsFrom(series, single)
+  const solo = runs.length === 1 && runs[0]!.length > 1 ? runs[0]! : null
+  const area = solo
+    ? `M${solo[0]!.x.toFixed(1)},${VB_H} L${pointsOf(solo)} L${solo[solo.length - 1]!.x.toFixed(1)},${VB_H} Z`
+    : ''
 
   const avg = recorded.length > 0 ? recorded.reduce((a, b) => a + b, 0) / recorded.length : 0
   const hi = recorded.length > 0 ? Math.max(...recorded) : 0
@@ -406,7 +441,7 @@ function Instrument({
   const labels = useMemo(() => rangeLabels(range), [range])
   const spanWord =
     range === 'week'
-      ? 'last 7 days'
+      ? 'this week'
       : range === 'month'
         ? 'this month so far'
         : 'this year so far'
@@ -854,7 +889,9 @@ export default function Dashboard() {
   const [seeded, setSeeded] = useState(false)
   useEffect(() => {
     if (seeded || moodHistory.data === undefined) return
-    const today = new Date().toISOString().slice(0, 10)
+    // Local, not UTC — see `localDay`. In IST this ran a day behind before 05:30,
+    // so an early-morning check-in would not be found and Save would overwrite it.
+    const today = localDay(new Date())
     const hit = moodHistory.data.find((c) => c.entryDate.slice(0, 10) === today)
     setSeeded(true)
     if (hit === undefined) return

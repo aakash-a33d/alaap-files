@@ -186,7 +186,11 @@ export const TICKS: Record<Metric, number[]> = {
   stress: [10, 8, 6, 4, 2],
 }
 
-export const RANGE_LENGTH: Record<Range, number> = { week: 7, month: 30, year: 12 }
+/* `RANGE_LENGTH` was here — { week: 7, month: 30, year: 12 }. Nothing imported it, and
+   two of its three values were wrong once the ranges became calendar periods: a month
+   is 28 to 31 days, and the year view counts days rather than months. `rangeWindow`
+   derives all of it from the date. Removed rather than corrected, because a constant
+   nobody reads is the one somebody reaches for next. */
 
 /* `trend()` was here. It generated a sine wave with seeded noise and only the final
    point was real, so a new account displayed a month of mood it had never lived.
@@ -201,61 +205,77 @@ const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'O
 const atMidnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
 
 /**
- * How many daily points a range draws, always ending today.
+ * The calendar period a range covers: where it starts, and how many days wide it is.
  *
- * Month and year are calendar periods **to date**, not rolling windows: the month view
- * runs from the 1st to today, the year view from 1 January to today. That is what the
- * day-of-month axis has always implied, and it is the only shape with no empty future
- * on the right — a rolling window ending today is honest about its last point but puts
- * the 1st of the window at the left edge, and a window running to the 30th of a month
- * draws six days nobody has lived yet.
+ * All three are whole calendar periods, drawn at full width — the week Monday to
+ * Sunday, the month the 1st to the 28th, 29th, 30th or 31st depending on the month and
+ * the year, the year January to December. The axis is therefore the shape of the period
+ * itself and does not move from day to day.
  *
- * So the span moves with the date. On the 1st it is a single point; on the 24th it is
- * twenty-four.
+ * Only the days up to today carry a reading. The rest of the axis is empty, which is
+ * the honest picture: the month exists, and the part of it nobody has lived yet is
+ * blank rather than absent. The line stops at today.
+ *
+ * This is what the day-of-month axis always implied, and what two earlier attempts got
+ * wrong in opposite directions — first a fixed axis with a rolling window under it,
+ * which labelled the last reading with a date six days in the future, then a window
+ * that ended at today and shrank the month to fit it.
  */
-export function rangeSpan(range: Range, now: Date = new Date()): number {
-  if (range === 'week') return 7
-  if (range === 'month') return now.getDate()
-  const jan1 = new Date(now.getFullYear(), 0, 1)
-  return Math.round((atMidnight(now).getTime() - jan1.getTime()) / 86_400_000) + 1
+export function rangeWindow(range: Range, now: Date = new Date()): { start: Date; length: number } {
+  if (range === 'week') {
+    const start = atMidnight(now)
+    // Monday-first: getDay() is 0 on Sunday, which is the last day, not the first.
+    start.setDate(start.getDate() - ((now.getDay() + 6) % 7))
+    return { start, length: 7 }
+  }
+
+  if (range === 'month') {
+    // Day 0 of the next month is the last day of this one — 28, 29, 30 or 31, with
+    // February's leap year handled by the calendar rather than by us.
+    const length = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+    return { start: new Date(now.getFullYear(), now.getMonth(), 1), length }
+  }
+
+  const start = new Date(now.getFullYear(), 0, 1)
+  const nextYear = new Date(now.getFullYear() + 1, 0, 1)
+  const length = Math.round((nextYear.getTime() - start.getTime()) / 86_400_000)
+  return { start, length }
+}
+
+/** How far through its period today is, as a series index. -1 before it, length-1 after. */
+export function todayIndex(range: Range, now: Date = new Date()): number {
+  const { start, length } = rangeWindow(range, now)
+  const i = Math.round((atMidnight(now).getTime() - start.getTime()) / 86_400_000)
+  return Math.max(-1, Math.min(length - 1, i))
 }
 
 /**
- * Axis labels along the bottom, ending today.
+ * Axis labels along the bottom, spread across the whole period.
  *
  * Laid out with `justify-between`, so label i sits at i/(count-1) of the plot width and
- * names the series point at that same fraction. The last label is therefore always
- * today — the 24th, Sat, Oct — and never a day in the future.
- *
- * Counts shrink to fit a short period: there is no sensible seventh label on the 3rd of
- * the month, so it draws three.
+ * names the day at that same fraction of the period. The last label is the last day of
+ * the period — Sunday, the 31st, December — not today, because the axis is the month
+ * and the month does not end when today does.
  */
 export function rangeLabels(range: Range, now: Date = new Date()): string[] {
-  const span = rangeSpan(range, now)
+  const { start, length } = rangeWindow(range, now)
 
-  /** The series index a label sits over, for `count` labels spread across `span`. */
-  const indexAt = (i: number, count: number) =>
-    count === 1 ? span - 1 : Math.round((i * (span - 1)) / (count - 1))
+  /** The day a label sits over, for `count` labels spread across the period. */
+  const dayAt = (i: number, count: number) => {
+    const idx = count === 1 ? length - 1 : Math.round((i * (length - 1)) / (count - 1))
+    return new Date(start.getFullYear(), start.getMonth(), start.getDate() + idx)
+  }
 
   if (range === 'week') {
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(now)
-      d.setDate(d.getDate() - (6 - i))
-      return WEEKDAY[d.getDay()]!
-    })
+    return Array.from({ length: 7 }, (_, i) => WEEKDAY[dayAt(i, 7).getDay()]!)
   }
 
   if (range === 'year') {
-    // One label per other month at most, and never more than months elapsed.
-    const count = Math.min(6, now.getMonth() + 1)
-    return Array.from({ length: count }, (_, i) => {
-      const d = new Date(now.getFullYear(), 0, 1 + indexAt(i, count))
-      return MONTH[d.getMonth()]!
-    })
+    return Array.from({ length: 6 }, (_, i) => MONTH[dayAt(i, 6).getMonth()]!)
   }
 
-  const count = Math.min(7, span)
-  return Array.from({ length: count }, (_, i) => String(indexAt(i, count) + 1))
+  // Seven labels across the month, so the last is always its final day.
+  return Array.from({ length: 7 }, (_, i) => String(dayAt(i, 7).getDate()))
 }
 
 /* --- Practice assigned or chosen ----------------------------------------- */
