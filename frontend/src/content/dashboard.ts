@@ -195,48 +195,67 @@ export const RANGE_LENGTH: Record<Range, number> = { week: 7, month: 30, year: 1
    /api/mood/checkins and leaves gaps where there is no check-in. */
 
 
+const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const atMidnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
+
+/**
+ * How many daily points a range draws, always ending today.
+ *
+ * Month and year are calendar periods **to date**, not rolling windows: the month view
+ * runs from the 1st to today, the year view from 1 January to today. That is what the
+ * day-of-month axis has always implied, and it is the only shape with no empty future
+ * on the right — a rolling window ending today is honest about its last point but puts
+ * the 1st of the window at the left edge, and a window running to the 30th of a month
+ * draws six days nobody has lived yet.
+ *
+ * So the span moves with the date. On the 1st it is a single point; on the 24th it is
+ * twenty-four.
+ */
+export function rangeSpan(range: Range, now: Date = new Date()): number {
+  if (range === 'week') return 7
+  if (range === 'month') return now.getDate()
+  const jan1 = new Date(now.getFullYear(), 0, 1)
+  return Math.round((atMidnight(now).getTime() - jan1.getTime()) / 86_400_000) + 1
+}
+
 /**
  * Axis labels along the bottom, ending today.
  *
- * These used to be fixed strings — Mon-Sun, 1-30, Jan-Nov — left over from when the
- * chart came from `trend()` and the x-axis described a generic window rather than a
- * real one. The series runs from (today - span + 1) on the left to today on the right,
- * so the labels disagreed with it: the right-hand end read "Sun", "30" or "Nov" while
- * the point under it was today. On the 24th of a month that put the last reading under
- * a label six days in the future, which is a chart telling somebody they recorded a day
- * that has not happened.
+ * Laid out with `justify-between`, so label i sits at i/(count-1) of the plot width and
+ * names the series point at that same fraction. The last label is therefore always
+ * today — the 24th, Sat, Oct — and never a day in the future.
  *
- * The labels are laid out with `justify-between` across the plot, so label i sits at
- * i/(count-1) of the width, and the series point at that fraction is the one it names.
- * The last label is always today, or this month for the year view.
+ * Counts shrink to fit a short period: there is no sensible seventh label on the 3rd of
+ * the month, so it draws three.
  */
 export function rangeLabels(range: Range, now: Date = new Date()): string[] {
-  const dayBack = (n: number) => {
-    const d = new Date(now)
-    d.setDate(d.getDate() - n)
-    return d
-  }
+  const span = rangeSpan(range, now)
+
+  /** The series index a label sits over, for `count` labels spread across `span`. */
+  const indexAt = (i: number, count: number) =>
+    count === 1 ? span - 1 : Math.round((i * (span - 1)) / (count - 1))
 
   if (range === 'week') {
-    const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    return Array.from({ length: 7 }, (_, i) => WEEKDAY[dayBack(6 - i).getDay()]!)
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(now)
+      d.setDate(d.getDate() - (6 - i))
+      return WEEKDAY[d.getDay()]!
+    })
   }
 
   if (range === 'year') {
-    const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    // Six labels over twelve months, so every other month is named.
-    return Array.from({ length: 6 }, (_, i) => {
-      const d = new Date(now)
-      d.setDate(1)
-      d.setMonth(d.getMonth() - Math.round(((5 - i) * 11) / 5))
+    // One label per other month at most, and never more than months elapsed.
+    const count = Math.min(6, now.getMonth() + 1)
+    return Array.from({ length: count }, (_, i) => {
+      const d = new Date(now.getFullYear(), 0, 1 + indexAt(i, count))
       return MONTH[d.getMonth()]!
     })
   }
 
-  // Seven labels over thirty days: indices 0, 5, 10, 15, 19, 24, 29 counting back.
-  return Array.from({ length: 7 }, (_, i) =>
-    String(dayBack(Math.round(((6 - i) * 29) / 6)).getDate()),
-  )
+  const count = Math.min(7, span)
+  return Array.from({ length: count }, (_, i) => String(indexAt(i, count) + 1))
 }
 
 /* --- Practice assigned or chosen ----------------------------------------- */

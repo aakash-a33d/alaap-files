@@ -112,7 +112,7 @@ async function enrol(m, mobile) {
 }
 
 /**
- * Seven days of check-ins, ending yesterday.
+ * Thirty days of check-ins, ending yesterday.
  *
  * Written straight to clinical_vault, which is the one thing in this script that does
  * not go through the gateway. It cannot: `POST /api/mood/checkins` always writes to
@@ -121,31 +121,65 @@ async function enrol(m, mobile) {
  *
  * So the rule the rest of the file follows is broken here on purpose, and only here.
  *
- * Today is left empty. That is the point of the exercise: sign in, find a week of
- * history already drawn, press Save today, and watch today's reading join the end of
- * the line. It also exercises the real write path for the one day it can.
+ * Thirty rather than seven because the chart's month view runs from the 1st to today:
+ * on the 1st that needs nothing, on the 31st it needs thirty days behind it, and the
+ * script has no idea which day it will be run on. Thirty back from yesterday covers
+ * the whole month view on any date, and the week view sits inside it.
+ *
+ * Today is left empty. That is the point of the exercise: sign in, find the month
+ * already drawn, press Save today, and watch today's reading join the end of the line.
+ * It also exercises the real write path for the one day it can.
  *
  * These numbers are invented, and that is defensible here in a way it was not on the
  * dashboard: this is a demo account that exists to be tested, not a member being shown
  * a fabricated record of their own moods. The dashboard's seeded sine wave was deleted
  * for exactly that reason — see docs/Alaap-Status-and-Roadmap.docx, section 4.7.
  *
- * The arc is a rough week easing off: bad sleep and high stress early, both improving.
- * Loosely correlated rather than locked together, because a chart where three lines
- * move as one looks generated, and because people do not work that way.
+ * Written out rather than generated, for the same reason. A month of hand-set readings
+ * is a month somebody can read and disagree with; a formula would be the sine wave
+ * again with a different shape. The arc is a hard fortnight that eases: poor sleep and
+ * high stress through the first half, a bad patch around day 20, then steadier.
+ *
+ * All thirty days are present. An earlier version left three out to exercise the
+ * chart's broken line — `projectGapped` splits rather than bridging — but a complete
+ * month is what is wanted here, and the gap behaviour is better tested by deleting a
+ * row than by shipping a seed that quietly has fewer days than it claims.
  *
  * Mood is 1-7, matching the dashboard's seven-step word scale — 1 "Heavy" through 7
  * "Good". The column allows 1-10; the dashboard writes the lower seven of it.
  * Sleep is hours, 0-12. Stress is 1-10.
  */
-const MOOD_WEEK = [
-  { back: 7, mood: 3, sleep: 5.5, stress: 7 },
-  { back: 6, mood: 2, sleep: 4.5, stress: 8 },
-  { back: 5, mood: 3, sleep: 6.5, stress: 6 },
-  { back: 4, mood: 5, sleep: 7.0, stress: 5 },
-  { back: 3, mood: 4, sleep: 6.0, stress: 6 },
-  { back: 2, mood: 6, sleep: 7.5, stress: 4 },
-  { back: 1, mood: 5, sleep: 7.0, stress: 4 },
+const MOOD_MONTH = [
+  { back: 30, mood: 3, sleep: 5.5, stress: 7 },
+  { back: 29, mood: 2, sleep: 4.8, stress: 8 },
+  { back: 28, mood: 3, sleep: 6.0, stress: 7 },
+  { back: 27, mood: 4, sleep: 6.5, stress: 6 },
+  { back: 26, mood: 4, sleep: 6.2, stress: 6 },
+  { back: 25, mood: 3, sleep: 5.2, stress: 7 },
+  { back: 24, mood: 2, sleep: 4.5, stress: 9 },
+  { back: 23, mood: 3, sleep: 5.8, stress: 8 },
+  { back: 22, mood: 4, sleep: 7.0, stress: 6 },
+  { back: 21, mood: 4, sleep: 6.7, stress: 5 },
+  { back: 20, mood: 1, sleep: 3.8, stress: 10 },
+  { back: 19, mood: 2, sleep: 4.2, stress: 9 },
+  { back: 18, mood: 2, sleep: 4.6, stress: 9 },
+  { back: 17, mood: 3, sleep: 6.0, stress: 7 },
+  { back: 16, mood: 3, sleep: 6.3, stress: 7 },
+  { back: 15, mood: 4, sleep: 7.2, stress: 5 },
+  { back: 14, mood: 5, sleep: 7.5, stress: 4 },
+  { back: 13, mood: 4, sleep: 6.8, stress: 5 },
+  { back: 12, mood: 3, sleep: 5.5, stress: 7 },
+  { back: 11, mood: 4, sleep: 6.5, stress: 6 },
+  { back: 10, mood: 5, sleep: 7.8, stress: 4 },
+  { back: 9, mood: 5, sleep: 7.6, stress: 4 },
+  { back: 8, mood: 5, sleep: 7.3, stress: 4 },
+  { back: 7, mood: 4, sleep: 6.5, stress: 5 },
+  { back: 6, mood: 3, sleep: 5.0, stress: 7 },
+  { back: 5, mood: 4, sleep: 6.8, stress: 6 },
+  { back: 4, mood: 5, sleep: 7.5, stress: 4 },
+  { back: 3, mood: 6, sleep: 8.0, stress: 3 },
+  { back: 2, mood: 5, sleep: 7.2, stress: 4 },
+  { back: 1, mood: 6, sleep: 7.6, stress: 3 },
 ];
 
 function seedMoodHistory(pseudoId) {
@@ -153,7 +187,7 @@ function seedMoodHistory(pseudoId) {
 
   // ON CONFLICT so re-running the script moves the week along rather than failing on
   // the (pseudo_id, entry_date) unique constraint.
-  const values = MOOD_WEEK.map(
+  const values = MOOD_MONTH.map(
     (d) =>
       `(${pseudoId}, CURRENT_DATE - ${d.back}, ${d.mood}, ${d.sleep}, ${d.stress}, '{}')`,
   ).join(', ');
@@ -173,7 +207,7 @@ function seedMoodHistory(pseudoId) {
     ],
     { cwd: COMPOSE_DIR, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] },
   );
-  return MOOD_WEEK.length;
+  return MOOD_MONTH.length;
 }
 
 /* Written to read like real posts rather than samples: unfinished, specific, and not
@@ -272,7 +306,7 @@ async function main() {
     console.log(`  ${c.dim('post skipped: ' + own.status + ' (quota, probably — re-run resets nothing)')}`);
   }
 
-  // A week of check-ins ending yesterday, so the chart has a shape before you touch it
+  // A month of check-ins ending yesterday, so the chart has a shape before you touch it
   // and today is still yours to add.
   const seededDays = seedMoodHistory(demo.pseudoId);
   console.log(
@@ -298,7 +332,7 @@ async function main() {
   console.log(`  3. The six-digit code appears on the page under ${c.bold('Development')}`);
   console.log(c.dim('     (there is no SMS gateway locally, so the code is shown instead)'));
   console.log(c.bold('\n  What to try\n'));
-  console.log('  · Dashboard — a week of check-ins is already drawn, ending yesterday.');
+  console.log('  · Dashboard — a month of check-ins is already drawn, ending yesterday.');
   console.log('    Set mood, sleep and stress, press Save today, and today joins the line.');
   console.log(c.dim('    Press Save twice and it replaces rather than appends: a check-in is a'));
   console.log(c.dim('    statement about a day, not an event log.'));

@@ -16,6 +16,7 @@ import {
   formatSleep,
   monthShape,
   rangeLabels,
+  rangeSpan,
   type Metric,
   type Range,
 } from '../../content/dashboard'
@@ -281,7 +282,12 @@ function projectGapped(values: (number | null)[], metric: Metric): string {
   })
   if (current.length > 0) runs.push(current.join(' L'))
 
-  return runs.map((r) => `M${r}`).join(' ')
+  /* A run of one gets a zero-length segment so the round linecap renders it as a dot.
+     `M x,y` alone draws nothing, which on the 1st of a month — when the whole span is
+     a single day — would be an empty chart for somebody who had just recorded. */
+  return runs
+    .map((r) => (r.includes(' L') ? `M${r}` : `M${r} L${r}`))
+    .join(' ')
 }
 
 
@@ -376,7 +382,9 @@ function Instrument({
   loading: boolean
 }) {
   const single: Metric = metric === 'all' ? 'mood' : metric
-  const span = range === 'week' ? 7 : range === 'month' ? 30 : 365
+  /* Month and year run from the 1st — of the month, of the year — to today, so the
+     span moves with the date and the line never has a stretch of future to its right. */
+  const span = useMemo(() => rangeSpan(range), [range])
   const series = seriesFrom(history, single, span)
   const recorded = series.filter((v): v is number => v !== null)
 
@@ -397,7 +405,11 @@ function Instrument({
      under somebody who leaves the screen open across midnight. */
   const labels = useMemo(() => rangeLabels(range), [range])
   const spanWord =
-    range === 'week' ? 'last 7 days' : range === 'month' ? 'last 30 days' : 'last 12 months'
+    range === 'week'
+      ? 'last 7 days'
+      : range === 'month'
+        ? 'this month so far'
+        : 'this year so far'
   const whenWord = single === 'sleep' ? 'last night' : 'today'
 
   return (
@@ -458,9 +470,11 @@ function Instrument({
           fill="none"
           role="img"
           aria-label={
+            /* No article before spanWord: it already carries one where it needs it
+               ("last 7 days", "this month so far"). */
             metric === 'all'
-              ? `Mood, sleep and stress over the ${spanWord}, each on its own scale`
-              : `${single} over the ${spanWord}`
+              ? `Mood, sleep and stress over ${spanWord}, each on its own scale`
+              : `${single} over ${spanWord}`
           }
           /* Width is stated rather than left to `auto`: an SVG is a replaced
              element, so an over-constrained box resolves from the viewBox's
@@ -821,7 +835,9 @@ export default function Dashboard() {
   const community = useFeed(3)
   const own = useOwnPosts()
   const categories = useCategories()
-  const moodHistory = useMoodHistory(30)
+  /* Enough for the widest range the chart can draw. It fetched 30, so the year view
+     was drawing a year's axis over one month of data and leaving the rest as gaps. */
+  const moodHistory = useMoodHistory(366)
 
   /**
    * Show today's check-in if there already is one.
