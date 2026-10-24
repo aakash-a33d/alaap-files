@@ -242,12 +242,12 @@ function localDay(d: Date): string {
 function seriesFrom(
   checkins: MoodCheckin[],
   metric: Metric,
-  window: { start: Date; length: number },
+  period: { start: Date; length: number },
 ): (number | null)[] {
   const byDate = new Map<string, (typeof checkins)[number]>()
   for (const c of checkins) byDate.set(c.entryDate.slice(0, 10), c)
 
-  const { start, length } = window
+  const { start, length } = period
   const out: (number | null)[] = []
   for (let i = 0; i < length; i += 1) {
     const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
@@ -413,8 +413,8 @@ function Instrument({
   const single: Metric = metric === 'all' ? 'mood' : metric
   /* The whole calendar period — all 28, 29, 30 or 31 days of the month — so the axis is
      the shape of the month itself. Only the days up to today hold a reading. */
-  const window = useMemo(() => rangeWindow(range), [range])
-  const series = seriesFrom(history, single, window)
+  const period = useMemo(() => rangeWindow(range), [range])
+  const series = seriesFrom(history, single, period)
   const recorded = series.filter((v): v is number => v !== null)
 
   const line = projectGapped(series, single)
@@ -522,7 +522,7 @@ function Instrument({
             (['mood', 'sleep', 'stress'] as Metric[]).map((m) => (
               <path
                 key={m}
-                d={projectGapped(seriesFrom(history, m, span), m)}
+                d={projectGapped(seriesFrom(history, m, period), m)}
                 stroke={SERIES_INK[m]}
                 strokeWidth="2"
                 strokeLinejoin="round"
