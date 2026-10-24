@@ -9,17 +9,26 @@
  * member's own post is never moderated — every category needs a recipient — so the
  * only way to see A1 work is to reply to someone else.
  *
- * Everything goes through the gateway, exactly as the browser does. Nothing is written
- * directly to a database, so the audit trail, consent checks and quota all apply and
- * the resulting state is state the product could really have reached.
+ * Everything goes through the gateway, exactly as the browser does, so the audit trail,
+ * consent checks and quota all apply and the resulting state is state the product could
+ * really have reached.
+ *
+ * One exception, and it is marked where it happens: the week of back-dated mood
+ * check-ins is written straight to clinical_vault, because the check-in endpoint takes
+ * no date and must not. See `seedMoodHistory`.
  *
  * Safe to re-run: the demo number signs in rather than registering if it already
  * exists, and the other members get fresh numbers each time.
  */
 
+import { execFileSync } from 'node:child_process';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { Redis, DEFAULT_REDIS_URL, clearAbuseCounters } from './lib/redis.mjs';
 
 const GATEWAY = process.env.GATEWAY_URL ?? 'http://127.0.0.1:8080';
+const COMPOSE_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../infrastructure/docker/compose');
 
 /** The one you sign in with. Fixed so it is the same number every time. */
 const DEMO_MOBILE = '9000000001';
@@ -77,7 +86,12 @@ async function enrol(m, mobile) {
       ageConfirmed: true,
     });
     if (verified.status === 201) {
-      return { handle: verified.body.handle, recoveryCodes: verified.body.recoveryCodes ?? [], fresh: true };
+      return {
+        handle: verified.body.handle,
+        pseudoId: verified.body.pseudoId,
+        recoveryCodes: verified.body.recoveryCodes ?? [],
+        fresh: true,
+      };
     }
   }
   // Already registered — sign in instead.
@@ -89,7 +103,73 @@ async function enrol(m, mobile) {
   if (signedIn.status !== 200) {
     throw new Error(`could not enrol ${mobile}: ${signedIn.status} ${JSON.stringify(signedIn.body)}`);
   }
-  return { handle: signedIn.body.handle, recoveryCodes: [], fresh: false };
+  return {
+    handle: signedIn.body.handle,
+    pseudoId: signedIn.body.pseudoId,
+    recoveryCodes: [],
+    fresh: false,
+  };
+}
+
+/**
+ * Seven days of check-ins, ending yesterday.
+ *
+ * Written straight to clinical_vault, which is the one thing in this script that does
+ * not go through the gateway. It cannot: `POST /api/mood/checkins` always writes to
+ * CURRENT_DATE and takes no date, deliberately — a client that can name the day can
+ * forge a history, and a mood chart is only worth looking at if nobody can.
+ *
+ * So the rule the rest of the file follows is broken here on purpose, and only here.
+ *
+ * Today is left empty. That is the point of the exercise: sign in, find a week of
+ * history already drawn, press Save today, and watch today's reading join the end of
+ * the line. It also exercises the real write path for the one day it can.
+ *
+ * These numbers are invented, and that is defensible here in a way it was not on the
+ * dashboard: this is a demo account that exists to be tested, not a member being shown
+ * a fabricated record of their own moods. The dashboard's seeded sine wave was deleted
+ * for exactly that reason — see docs/Alaap-Status-and-Roadmap.docx, section 4.7.
+ *
+ * The arc is a rough week easing off: bad sleep and high stress early, both improving.
+ * Loosely correlated rather than locked together, because a chart where three lines
+ * move as one looks generated, and because people do not work that way.
+ */
+const MOOD_WEEK = [
+  { back: 7, mood: 4, sleep: 5.5, stress: 7 },
+  { back: 6, mood: 3, sleep: 4.5, stress: 8 },
+  { back: 5, mood: 5, sleep: 6.5, stress: 6 },
+  { back: 4, mood: 6, sleep: 7.0, stress: 5 },
+  { back: 3, mood: 5, sleep: 6.0, stress: 6 },
+  { back: 2, mood: 7, sleep: 7.5, stress: 4 },
+  { back: 1, mood: 6, sleep: 7.0, stress: 4 },
+];
+
+function seedMoodHistory(pseudoId) {
+  if (typeof pseudoId !== 'number' && typeof pseudoId !== 'string') return 0;
+
+  // ON CONFLICT so re-running the script moves the week along rather than failing on
+  // the (pseudo_id, entry_date) unique constraint.
+  const values = MOOD_WEEK.map(
+    (d) =>
+      `(${pseudoId}, CURRENT_DATE - ${d.back}, ${d.mood}, ${d.sleep}, ${d.stress}, '{}')`,
+  ).join(', ');
+
+  execFileSync(
+    'docker',
+    [
+      'compose', 'exec', '-T', 'postgres-shared',
+      'psql', '-v', 'ON_ERROR_STOP=1', '-U', 'postgres', '-d', 'clinical_vault', '-tAc',
+      `INSERT INTO mood_checkins
+         (pseudo_id, entry_date, mood_score, sleep_hours, stress_score, emotion_tags)
+       VALUES ${values}
+       ON CONFLICT (pseudo_id, entry_date) DO UPDATE
+         SET mood_score   = EXCLUDED.mood_score,
+             sleep_hours  = EXCLUDED.sleep_hours,
+             stress_score = EXCLUDED.stress_score`,
+    ],
+    { cwd: COMPOSE_DIR, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] },
+  );
+  return MOOD_WEEK.length;
 }
 
 /* Written to read like real posts rather than samples: unfinished, specific, and not
@@ -188,6 +268,15 @@ async function main() {
     console.log(`  ${c.dim('post skipped: ' + own.status + ' (quota, probably — re-run resets nothing)')}`);
   }
 
+  // A week of check-ins ending yesterday, so the chart has a shape before you touch it
+  // and today is still yours to add.
+  const seededDays = seedMoodHistory(demo.pseudoId);
+  console.log(
+    seededDays > 0
+      ? `  ${c.green('mood')} ${seededDays} days of check-ins ${c.dim('— today left empty, so Save today adds to them')}`
+      : `  ${c.dim('mood history skipped: no pseudo id returned')}`,
+  );
+
   // Consent for the journal, so the clinical surface is testable without a 451 first.
   const consent = await call(you, 'POST', '/api/consent/grant/care-delivery');
   console.log(
@@ -205,7 +294,10 @@ async function main() {
   console.log(`  3. The six-digit code appears on the page under ${c.bold('Development')}`);
   console.log(c.dim('     (there is no SMS gateway locally, so the code is shown instead)'));
   console.log(c.bold('\n  What to try\n'));
-  console.log('  · Dashboard — set mood and sleep, press Save today. The chart fills in.');
+  console.log('  · Dashboard — a week of check-ins is already drawn, ending yesterday.');
+  console.log('    Set mood, sleep and stress, press Save today, and today joins the line.');
+  console.log(c.dim('    Press Save twice and it replaces rather than appends: a check-in is a'));
+  console.log(c.dim('    statement about a day, not an event log.'));
   console.log('  · Community — your post has an Alaap AI first response.');
   console.log(`  · Reply to somebody else's post with something ordinary. It sends.`);
   console.log('  · Reply with something cruel. The button changes to "Rewrite to send"');

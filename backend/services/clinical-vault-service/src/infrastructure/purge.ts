@@ -27,6 +27,7 @@ export interface ClinicalExport {
     moodScore: number;
     energyScore: number | null;
     sleepHours: number | null;
+    stressScore: number | null;
     emotionTags: string[];
   }[];
 }
@@ -99,9 +100,10 @@ export class ClinicalPurge {
       mood_score: number;
       energy_score: number | null;
       sleep_hours: string | null;
+      stress_score: number | null;
       emotion_tags: string[] | null;
     }>(
-      `SELECT entry_date, mood_score, energy_score, sleep_hours, emotion_tags
+      `SELECT entry_date, mood_score, energy_score, sleep_hours, stress_score, emotion_tags
          FROM mood_checkins
         WHERE pseudo_id = $1
         ORDER BY entry_date`,
@@ -115,6 +117,7 @@ export class ClinicalPurge {
         moodScore: r.mood_score,
         energyScore: r.energy_score,
         sleepHours: r.sleep_hours === null ? null : Number(r.sleep_hours),
+        stressScore: r.stress_score,
         emotionTags: r.emotion_tags ?? [],
       })),
     };

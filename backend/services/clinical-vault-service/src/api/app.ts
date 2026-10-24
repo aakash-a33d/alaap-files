@@ -73,6 +73,7 @@ const MoodBody = z.object({
   moodScore: z.number().int().min(1).max(10),
   energyScore: z.number().int().min(1).max(10).optional(),
   sleepHours: z.number().min(0).max(24).optional(),
+  stressScore: z.number().int().min(1).max(10).optional(),
   emotionTags: z.array(z.string().min(1).max(30)).max(10).optional(),
 });
 

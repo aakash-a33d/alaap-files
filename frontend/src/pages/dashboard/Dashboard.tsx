@@ -237,14 +237,15 @@ function seriesFrom(
       out.push(null)
       continue
     }
-    // Only mood and sleep are recorded. Stress has no column in mood_checkins, so it
-    // has no history to draw — see the note at its tab.
+    // Null rather than a substitute when a day holds no value for this metric.
+    // Check-ins written before `stress_score` existed genuinely have no stress, and
+    // `projectGapped` breaks the line there rather than bridging it.
     out.push(
       metric === 'mood'
         ? hit.moodScore
         : metric === 'sleep'
           ? (hit.sleepHours ?? null)
-          : null,
+          : (hit.stressScore ?? null),
     )
   }
   return out
@@ -454,9 +455,9 @@ function Instrument({
           className="absolute inset-y-0 left-[54px] h-full w-[calc(100%-54px)] sm:left-[70px] sm:w-[calc(100%-70px)]"
         >
           {metric === 'all' ? (
-            /* Mood and sleep only. `mood_checkins` stores no stress column, so there
-               is no stress history to draw — drawing one would mean inventing it. */
-            (['mood', 'sleep'] as Metric[]).map((m) => (
+            /* All three, each against its own scale — the shared axis would be
+               meaningless across hours and two 1-10 scales that point opposite ways. */
+            (['mood', 'sleep', 'stress'] as Metric[]).map((m) => (
               <path
                 key={m}
                 d={projectGapped(seriesFrom(history, m, span), m)}
@@ -490,9 +491,7 @@ function Instrument({
             <p className="max-w-[18rem] px-4 text-center text-[0.78rem] leading-relaxed text-[var(--app-on-dark-dim)]">
               {loading
                 ? 'Loading your check-ins'
-                : single === 'stress'
-                  ? 'Stress is recorded with today\u2019s check-in but is not kept as history yet.'
-                  : 'Nothing recorded yet. Save today\u2019s check-in and this fills in from there.'}
+                : 'Nothing recorded yet. Save today\u2019s check-in and this fills in from there.'}
             </p>
           </div>
         )}
@@ -827,6 +826,7 @@ export default function Dashboard() {
     if (hit === undefined) return
     setMood(hit.moodScore)
     if (hit.sleepHours !== undefined && hit.sleepHours !== null) setSleep(hit.sleepHours)
+    if (hit.stressScore !== undefined && hit.stressScore !== null) setStress(hit.stressScore)
     setSaved(true)
   }, [moodHistory.data, seeded])
 
@@ -838,15 +838,20 @@ export default function Dashboard() {
    * than appends; the server treats a check-in as a statement about a day, not an
    * event, so a member correcting theirs is not creating a second day.
    *
-   * Stress is not sent. `mood_checkins` has no column for it, and inventing one here
-   * would mean the slider claimed to record something the vault cannot hold.
+   * All three numbers are sent. Stress used to be collected and dropped, because
+   * `mood_checkins` had no column for it — asking somebody how heavy their day was
+   * and discarding the answer is worse than not asking.
    */
   async function saveToday() {
     if (savingMood) return
     setSavingMood(true)
     setMoodMsg(null)
     try {
-      await recordMood({ moodScore: Math.round(mood), sleepHours: Number(sleep.toFixed(2)) })
+      await recordMood({
+        moodScore: Math.round(mood),
+        sleepHours: Number(sleep.toFixed(2)),
+        stressScore: Math.round(stress),
+      })
       setSaved(true)
       moodHistory.reload()
     } catch {

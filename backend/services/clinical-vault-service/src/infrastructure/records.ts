@@ -38,6 +38,7 @@ export interface MoodCheckin {
   moodScore: number;
   energyScore: number | undefined;
   sleepHours: number | undefined;
+  stressScore: number | undefined;
   emotionTags: string[];
   entryDate: string;
 }
@@ -243,6 +244,7 @@ export class RecordRepository {
     moodScore: number;
     energyScore?: number | undefined;
     sleepHours?: number | undefined;
+    stressScore?: number | undefined;
     emotionTags?: string[] | undefined;
   }): Promise<MoodCheckin> {
     const { rows } = await this.pool.query<{
@@ -250,23 +252,26 @@ export class RecordRepository {
       mood_score: number;
       energy_score: number | null;
       sleep_hours: string | null;
+      stress_score: number | null;
       emotion_tags: string[];
       entry_date: Date;
     }>(
-      `INSERT INTO mood_checkins (pseudo_id, mood_score, energy_score, sleep_hours, emotion_tags)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO mood_checkins (pseudo_id, mood_score, energy_score, sleep_hours, stress_score, emotion_tags)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (pseudo_id, entry_date) DO UPDATE
-         SET mood_score  = EXCLUDED.mood_score,
+         SET mood_score   = EXCLUDED.mood_score,
              energy_score = EXCLUDED.energy_score,
              sleep_hours  = EXCLUDED.sleep_hours,
+             stress_score = EXCLUDED.stress_score,
              emotion_tags = EXCLUDED.emotion_tags,
              recorded_at  = now()
-       RETURNING id, mood_score, energy_score, sleep_hours, emotion_tags, entry_date`,
+       RETURNING id, mood_score, energy_score, sleep_hours, stress_score, emotion_tags, entry_date`,
       [
         params.pseudoId,
         params.moodScore,
         params.energyScore ?? null,
         params.sleepHours ?? null,
+        params.stressScore ?? null,
         params.emotionTags ?? [],
       ],
     );
@@ -276,6 +281,7 @@ export class RecordRepository {
       moodScore: row.mood_score,
       energyScore: row.energy_score ?? undefined,
       sleepHours: row.sleep_hours === null ? undefined : Number(row.sleep_hours),
+      stressScore: row.stress_score ?? undefined,
       emotionTags: row.emotion_tags,
       entryDate: row.entry_date.toISOString().slice(0, 10),
     };
@@ -287,10 +293,11 @@ export class RecordRepository {
       mood_score: number;
       energy_score: number | null;
       sleep_hours: string | null;
+      stress_score: number | null;
       emotion_tags: string[];
       entry_date: Date;
     }>(
-      `SELECT id, mood_score, energy_score, sleep_hours, emotion_tags, entry_date
+      `SELECT id, mood_score, energy_score, sleep_hours, stress_score, emotion_tags, entry_date
          FROM mood_checkins
         WHERE pseudo_id = $1 AND entry_date > CURRENT_DATE - $2::integer
         ORDER BY entry_date DESC`,
@@ -301,6 +308,7 @@ export class RecordRepository {
       moodScore: r.mood_score,
       energyScore: r.energy_score ?? undefined,
       sleepHours: r.sleep_hours === null ? undefined : Number(r.sleep_hours),
+      stressScore: r.stress_score ?? undefined,
       emotionTags: r.emotion_tags,
       entryDate: r.entry_date.toISOString().slice(0, 10),
     }));

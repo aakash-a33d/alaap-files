@@ -203,6 +203,7 @@ export class Clinical {
       moodScore: number;
       energyScore?: number | undefined;
       sleepHours?: number | undefined;
+      stressScore?: number | undefined;
       emotionTags?: string[] | undefined;
     },
   ): Promise<MoodCheckin> {

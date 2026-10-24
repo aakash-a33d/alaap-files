@@ -38,6 +38,7 @@ export type MoodCheckin = {
   moodScore: number
   energyScore?: number
   sleepHours?: number
+  stressScore?: number
   emotionTags: string[]
   entryDate: string
 }
@@ -106,6 +107,7 @@ export async function recordMood(
     moodScore: number
     energyScore?: number
     sleepHours?: number
+    stressScore?: number
     emotionTags?: string[]
   },
   signal?: AbortSignal,

@@ -83,6 +83,11 @@ const PLAN = [
   // them, so the table file must come first.
   { instance: 'shared', db: 'core', file: 'database/migrations/core/0002_retention.sql' },
 
+  // Adds the stress column the dashboard had been collecting and discarding. No
+  // grant follows it: 0004 grants on `mood_checkins` as a table, and a new column
+  // on an already-granted table needs no further privilege.
+  { instance: 'shared', db: 'clinical_vault', file: 'database/migrations/clinical-vault/0002_stress_score.sql' },
+
   // --- later privilege changes ---------------------------------------------
   { instance: 'shared', db: 'postgres', file: 'database/policies/roles-grants/0008_reports_to_moderation.sql' },
   { instance: 'shared', db: 'postgres', file: 'database/policies/roles-grants/0009_retention.sql' },
