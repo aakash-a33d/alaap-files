@@ -33,6 +33,19 @@ describe('AvatarLook', () => {
     expect(AvatarLook.safeParse({ portrait: 'man-30s', note: 'hello' }).success).toBe(false);
   });
 
+  it('accepts colours laid over a portrait, each on its own', () => {
+    expect(AvatarLook.safeParse({ portrait: 'woman-older', hair: 'silver' }).success).toBe(true);
+    expect(
+      AvatarLook.safeParse({ portrait: 'man-30s', hair: 'black', skin: 'deep', outfit: 'navy' })
+        .success,
+    ).toBe(true);
+  });
+
+  it('refuses a colour value in place of a colour key', () => {
+    expect(AvatarLook.safeParse({ portrait: 'man-30s', skin: '#8a5a3c' }).success).toBe(false);
+    expect(AvatarLook.safeParse({ portrait: 'man-30s', outfit: 'neon' }).success).toBe(false);
+  });
+
   it('refuses a look saved by the earlier drawn builder', () => {
     expect(AvatarLook.safeParse({ hair: 'bun', skin: 'tan', outfit: 'saree' }).success).toBe(false);
   });
