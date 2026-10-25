@@ -19,14 +19,7 @@
    platform except the members themselves, and a therapist who wears one
    starts to look like a peer.
 
-   On top of the portrait, a member can change three colours: the hair, the
-   skin and the outfit. The portrait itself never changes. Each one has three
-   soft masks traced from it (model/layers/, built by
-   scripts/avatars/build-layers.py), and a masked region is redrawn through a
-   gradient map. That swaps the colour and keeps every bit of the original
-   shading. The shape of the hair is the portrait's own; only its colour moves.
-
-   The files live in public/avatars/ at 384px. Some of the originals carry a
+   The files live in public/avatars/ at 512px. Some of the originals carry a
    small mark in the bottom-right corner. Every place a portrait is shown masks
    it to a circle, which hides that corner. Keep the circle.
    ========================================================================= */
@@ -79,65 +72,7 @@ export const PORTRAITS: Portrait[] = GENDERS.flatMap((g) =>
 
 const BY_ID = new Map(PORTRAITS.map((p) => [p.id, p]))
 
-/* --- Colours laid over a portrait ---------------------------------------
-   Each is a base colour in oklch. The renderer spreads it into a ramp from a
-   shadow to a highlight and maps the region's own light and dark onto it.
-   `original` is not in these lists: leaving a part unset draws it as painted. */
-
-export type HairColour = 'black' | 'espresso' | 'brown' | 'auburn' | 'golden' | 'grey' | 'silver'
-export type SkinTone = 'fair' | 'wheat' | 'honey' | 'tan' | 'brown' | 'deep'
-export type OutfitColour =
-  | 'cream'
-  | 'charcoal'
-  | 'navy'
-  | 'teal'
-  | 'olive'
-  | 'mustard'
-  | 'maroon'
-  | 'rose'
-  | 'lavender'
-
-export type Swatch<T extends string> = { id: T; label: string; lch: [number, number, number] }
-
-export const HAIR_COLOURS: Swatch<HairColour>[] = [
-  { id: 'black', label: 'Black', lch: [0.22, 0.012, 50] },
-  { id: 'espresso', label: 'Dark brown', lch: [0.3, 0.035, 45] },
-  { id: 'brown', label: 'Brown', lch: [0.42, 0.06, 55] },
-  { id: 'auburn', label: 'Auburn', lch: [0.45, 0.11, 38] },
-  { id: 'golden', label: 'Golden', lch: [0.7, 0.1, 80] },
-  { id: 'grey', label: 'Grey', lch: [0.62, 0.008, 70] },
-  { id: 'silver', label: 'Silver', lch: [0.82, 0.006, 80] },
-]
-
-/** The range a room in India actually holds, lightest first. */
-export const SKIN_TONES: Swatch<SkinTone>[] = [
-  { id: 'fair', label: 'Fair', lch: [0.82, 0.06, 60] },
-  { id: 'wheat', label: 'Wheatish', lch: [0.76, 0.07, 60] },
-  { id: 'honey', label: 'Honey', lch: [0.69, 0.08, 57] },
-  { id: 'tan', label: 'Tan', lch: [0.61, 0.08, 52] },
-  { id: 'brown', label: 'Brown', lch: [0.52, 0.075, 46] },
-  { id: 'deep', label: 'Deep', lch: [0.42, 0.06, 42] },
-]
-
-export const OUTFIT_COLOURS: Swatch<OutfitColour>[] = [
-  { id: 'cream', label: 'Cream', lch: [0.92, 0.02, 85] },
-  { id: 'charcoal', label: 'Charcoal', lch: [0.35, 0.01, 260] },
-  { id: 'navy', label: 'Navy', lch: [0.38, 0.09, 262] },
-  { id: 'teal', label: 'Teal', lch: [0.52, 0.08, 200] },
-  { id: 'olive', label: 'Olive', lch: [0.5, 0.07, 125] },
-  { id: 'mustard', label: 'Mustard', lch: [0.78, 0.14, 85] },
-  { id: 'maroon', label: 'Maroon', lch: [0.42, 0.12, 20] },
-  { id: 'rose', label: 'Rose', lch: [0.72, 0.09, 10] },
-  { id: 'lavender', label: 'Lavender', lch: [0.72, 0.08, 300] },
-]
-
-export type AvatarLook = {
-  portrait: PortraitId
-  /** unset draws the part as painted */
-  hair?: HairColour
-  skin?: SkinTone
-  outfit?: OutfitColour
-}
+export type AvatarLook = { portrait: PortraitId }
 
 /** What every member starts as, until they choose otherwise. Deliberately one
     portrait for everybody rather than one picked from the handle or the
@@ -172,24 +107,11 @@ export const MEMBER_LOOKS: Record<FaceKey, AvatarLook> = {
 
 /** A look read back from the server. Anything that is not a known portrait
     (a retired id, or a look saved by the earlier drawn builder) is treated as
-    no choice at all, and the member sees the default. A colour that is no
-    longer offered falls back to the portrait as painted, for that part only. */
+    no choice at all, and the member sees the default. */
 export function readLook(raw: unknown): AvatarLook | undefined {
   if (raw === null || typeof raw !== 'object') return undefined
-  const r = raw as Record<string, unknown>
-  if (typeof r.portrait !== 'string' || !BY_ID.has(r.portrait as PortraitId)) return undefined
-  const pick = <T extends string>(v: unknown, list: Swatch<T>[]) =>
-    list.find((s) => s.id === v)?.id
-  const look: AvatarLook = { portrait: r.portrait as PortraitId }
-  const hair = pick(r.hair, HAIR_COLOURS)
-  const skin = pick(r.skin, SKIN_TONES)
-  const outfit = pick(r.outfit, OUTFIT_COLOURS)
-  if (hair) look.hair = hair
-  if (skin) look.skin = skin
-  if (outfit) look.outfit = outfit
-  return look
+  const id = (raw as { portrait?: unknown }).portrait
+  return typeof id === 'string' && BY_ID.has(id as PortraitId)
+    ? { portrait: id as PortraitId }
+    : undefined
 }
-
-/** CSS for a swatch dot. */
-export const swatchCss = ([l, c, h]: [number, number, number]) =>
-  `radial-gradient(circle at 36% 32%, oklch(${Math.min(l + 0.08, 0.98)} ${c} ${h}), oklch(${l} ${c} ${h}) 55%, oklch(${Math.max(l - 0.1, 0.05)} ${c} ${h}))`

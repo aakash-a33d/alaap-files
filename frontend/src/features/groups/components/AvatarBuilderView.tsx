@@ -3,15 +3,10 @@ import { BUILDER } from '../../../content/groups'
 import {
   AGE_BANDS,
   GENDERS,
-  HAIR_COLOURS,
-  OUTFIT_COLOURS,
   PORTRAITS,
-  SKIN_TONES,
   describe,
   portraitOf,
-  swatchCss,
   type AvatarLook,
-  type Swatch,
 } from '../model/avatar'
 import { saveMyLook, useMyLook } from '../model/myLook'
 import { AvatarArt } from './Avatar'
@@ -23,12 +18,8 @@ import { Eyebrow, MONO, PILL_QUIET, PILL_SOLID, SERIF, Title } from './parts'
 
    Twelve portraits laid out as a table: women on one row and men on the
    other, one column per age from child to elder. You find yourself, or who
-   you would like to be met as, by reading along a row.
-
-   Under the table, three rows of colours: hair, skin and outfit. Each starts
-   on "as painted". A colour changes that part of whichever portrait is
-   chosen, and stays chosen when the portrait changes, so every tile in the
-   table previews it.
+   you would like to be met as, by reading along a row. There is nothing to
+   build.
 
    The preview panel takes the colour of the chosen portrait's own backdrop,
    so the panel and the portrait in it read as one picture. The preview can
@@ -160,7 +151,7 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
                     title={describe(p)}
                     onClick={() => {
                       touched.current = true
-                      setLook((l) => ({ ...l, portrait: p.id }))
+                      setLook({ portrait: p.id })
                     }}
                     className="group flex flex-col items-center gap-1.5 rounded-[14px] py-1 focus-visible:outline-2 focus-visible:outline-[var(--gr-terra)]"
                   >
@@ -175,7 +166,7 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
                           : '0 2px 6px rgb(26 24 20 / 0.12)',
                       }}
                     >
-                      <AvatarArt look={{ ...look, portrait: p.id }} />
+                      <AvatarArt look={{ portrait: p.id }} />
                     </span>
                     <span
                       className={`${MONO} text-[0.56rem] uppercase tracking-[0.06em] sm:hidden ${
@@ -190,36 +181,6 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
             </div>
           ))}
           <p className={`${MONO} mt-3 text-[0.6rem] text-[var(--app-dim)]`}>{BUILDER.pickNote}</p>
-        </div>
-
-        <div className="mt-6 grid gap-4">
-          <ColourRow
-            label="Hair colour"
-            list={HAIR_COLOURS}
-            value={look.hair}
-            onChange={(hair) => {
-              touched.current = true
-              setLook((l) => ({ ...l, hair }))
-            }}
-          />
-          <ColourRow
-            label="Skin colour"
-            list={SKIN_TONES}
-            value={look.skin}
-            onChange={(skin) => {
-              touched.current = true
-              setLook((l) => ({ ...l, skin }))
-            }}
-          />
-          <ColourRow
-            label="Outfit colour"
-            list={OUTFIT_COLOURS}
-            value={look.outfit}
-            onChange={(outfit) => {
-              touched.current = true
-              setLook((l) => ({ ...l, outfit }))
-            }}
-          />
         </div>
 
         {/* Whether the portrait moves is a real accessibility choice, not a
@@ -278,63 +239,5 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
         </div>
       </div>
     </div>
-  )
-}
-
-const DOT_ON = '0 0 0 2px var(--app-ground), 0 0 0 3.5px var(--gr-terra)'
-
-/** One row of colours for one part, led by "as painted", which leaves that
-    part exactly as the portrait has it. */
-function ColourRow<T extends string>({
-  label,
-  list,
-  value,
-  onChange,
-}: {
-  label: string
-  list: Swatch<T>[]
-  value: T | undefined
-  onChange: (v: T | undefined) => void
-}) {
-  const name = value ? list.find((s) => s.id === value)?.label : 'As painted'
-  return (
-    <fieldset className="border-0 p-0">
-      <div className="flex items-baseline gap-2">
-        <legend className="float-left">
-          <Eyebrow>{label.toLowerCase()}</Eyebrow>
-        </legend>
-        <span className="text-[0.7rem] text-[var(--app-dim)]">{name}</span>
-      </div>
-      <div role="radiogroup" aria-label={label} className="mt-2 flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          role="radio"
-          aria-checked={value === undefined}
-          aria-label="As painted"
-          title="As painted"
-          onClick={() => onChange(undefined)}
-          className="grid h-[28px] w-[28px] place-items-center rounded-full border border-dashed border-[var(--gr-line-strong)] bg-[var(--gr-paper)] text-[0.62rem] text-[var(--app-muted)]"
-          style={{ boxShadow: value === undefined ? DOT_ON : undefined }}
-        >
-          ✦
-        </button>
-        {list.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            role="radio"
-            aria-checked={value === s.id}
-            aria-label={s.label}
-            title={s.label}
-            onClick={() => onChange(s.id)}
-            className="h-[28px] w-[28px] rounded-full"
-            style={{
-              background: swatchCss(s.lch),
-              boxShadow: value === s.id ? DOT_ON : 'inset 0 0 0 1px rgb(26 24 20 / 0.08)',
-            }}
-          />
-        ))}
-      </div>
-    </fieldset>
   )
 }
