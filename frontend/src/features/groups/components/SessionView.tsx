@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { CHAT, GROUP, IN_SESSION_TASKS, SEATS, SESSION } from '../../../content/groups'
 import { ROOM_COUNT, useSpeakingCycle } from '../model/session'
+import { useMyLook } from '../model/myLook'
 import { Avatar } from './Avatar'
-import { ParticipantCircle, SeatMedia } from './ParticipantCircle'
+import { lookOf, ParticipantCircle, SeatMedia } from './ParticipantCircle'
 import {
   Eyebrow,
   MONO,
@@ -346,6 +347,8 @@ export function SessionView({
     member's own is reversed — nobody has to work out who said what. */
 function ChatBubble({ line }: { line: (typeof CHAT)[number] }) {
   const seat = SEATS.find((s) => s.id === line.seat)
+  const myLook = useMyLook()
+  const look = seat && lookOf(seat, myLook)
   const mine = line.from === 'you'
   const therapist = line.from === 'therapist'
 
@@ -354,8 +357,8 @@ function ChatBubble({ line }: { line: (typeof CHAT)[number] }) {
       {/* Big enough that the character is legible, not just a coloured dot —
           in a room where a drawn face is the only identity anyone has, the
           face beside the line is how you know who is talking. */}
-      {seat?.face ? (
-        <Avatar face={seat.face} size={34} className="mt-0.5" />
+      {look ? (
+        <Avatar look={look} size={34} className="mt-0.5" />
       ) : (
         <span
           aria-hidden="true"

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { JOIN_STEP, NAME_CHOICES, PRESENCE_CHOICES } from '../../../content/groups'
+import { useMyLook } from '../model/myLook'
 import { Avatar } from './Avatar'
 import { Eyebrow, MONO, PILL_QUIET, PILL_SOLID, Panel, Title } from './parts'
 
@@ -24,6 +25,7 @@ const CARD_OFF = 'border border-[var(--gr-line-strong)] hover:border-[var(--gr-t
 export function PresenceView({ onBack, onSave }: { onBack: () => void; onSave: () => void }) {
   const [name, setName] = useState<string>(NAME_CHOICES[0].id)
   const [presence, setPresence] = useState<string>(PRESENCE_CHOICES[0].id)
+  const myLook = useMyLook()
 
   return (
     <div className="mx-auto flex w-full max-w-[860px] flex-col gap-5">
@@ -110,7 +112,7 @@ export function PresenceView({ onBack, onSave }: { onBack: () => void; onSave: (
               >
                 <span className="flex justify-center">
                   {c.id === 'avatar' ? (
-                    <Avatar face="wren" size={56} />
+                    <Avatar look={myLook} size={56} />
                   ) : c.id === 'camera' ? (
                     <span
                       aria-hidden="true"

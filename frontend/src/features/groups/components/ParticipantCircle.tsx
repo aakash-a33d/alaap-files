@@ -1,8 +1,16 @@
 import { useId } from 'react'
 import { SEATS, type Seat } from '../../../content/groups'
-import type { Face } from '../model/avatar'
+import { MEMBER_LOOKS, paletteOf, type AvatarLook } from '../model/avatar'
+import { useMyLook } from '../model/myLook'
 import { usePrefersReducedMotion } from '../model/session'
-import { FaceArt } from './Avatar'
+import { AvatarArt } from './Avatar'
+
+/** Who a seat is drawn as: the member's own saved look in their own seat, the
+    illustrative look for everyone else, nothing for the therapist. */
+export function lookOf(seat: Seat, mine: AvatarLook): AvatarLook | undefined {
+  if (seat.role === 'you') return mine
+  return seat.face ? MEMBER_LOOKS[seat.face] : undefined
+}
 
 /* ============================================================================
    The circle — the group as an object rather than a grid of tiles.
@@ -94,9 +102,9 @@ export function ParticipantCircle({
   size?: number | string
   labels?: boolean
   onDark?: boolean
-  /** parts swapped over the member's own seat — the builder previewing an
-      avatar in the room it will actually be seen in */
-  you?: Partial<Face>
+  /** the member's own seat drawn with a look they have not saved yet — the
+      builder previewing an avatar in the room it will actually be seen in */
+  you?: AvatarLook
 }) {
   const reduced = usePrefersReducedMotion()
   const live = speaking
@@ -167,7 +175,7 @@ export function ParticipantCircle({
             labels={labels}
             onDark={onDark}
             still={reduced}
-            tweak={seat.role === 'you' ? you : undefined}
+            you={you}
           />
         ))}
 
@@ -205,7 +213,7 @@ function SeatFigure({
   labels,
   onDark,
   still,
-  tweak,
+  you,
 }: {
   seat: Seat
   centre: [number, number]
@@ -213,8 +221,10 @@ function SeatFigure({
   labels: boolean
   onDark: boolean
   still: boolean
-  tweak?: Partial<Face>
+  you?: AvatarLook
 }) {
+  const mine = useMyLook()
+  const look = lookOf(seat, you ?? mine)
   /* Travelling to the middle is a move between two centres, which is why the
      seats are placed by centre: the figure grows about its own middle rather
      than pulling towards its top-left as it goes. */
@@ -254,9 +264,9 @@ function SeatFigure({
     >
       <div
         className="relative h-full w-full overflow-hidden rounded-full transition-shadow duration-500"
-        style={{ background: tweak?.top ?? seat.colour, boxShadow: shadow }}
+        style={{ background: look ? paletteOf(look).backdrop.seat : seat.colour, boxShadow: shadow }}
       >
-        <SeatMedia seat={seat} initialSize={on ? '1.9em' : '1.02em'} tweak={tweak} />
+        <SeatMedia seat={seat} initialSize={on ? '1.9em' : '1.02em'} you={you} />
         <span
           className="absolute inset-0 rounded-full"
           style={{
@@ -322,22 +332,24 @@ function SeatFigure({
   )
 }
 
-/** What fills a seat: a camera if one is on, the member's flat character if
+/** What fills a seat: a camera if one is on, the member's portrait if
     not, and the therapist's initial on the group's own stripe. Exported so the
     live session's speaker panel and its roster strip fill their circles the
     same way the circle does — one rule, three places. */
 export function SeatMedia({
   seat,
   initialSize = '1.19em',
-  tweak,
+  you,
 }: {
   seat: Seat
   /** any CSS font-size — ems inside the circle, px in the flat strips */
   initialSize?: number | string
-  tweak?: Partial<Face>
+  you?: AvatarLook
 }) {
+  const mine = useMyLook()
+  const look = lookOf(seat, you ?? mine)
   if (seat.camera && seat.room) return <VideoSeat room={seat.room} />
-  if (seat.face) return <FaceArt face={seat.face} tweak={tweak} />
+  if (look) return <AvatarArt look={look} />
   /* No drawn character for the therapist — an initial on the group's own
      stripe, so she is plainly a person in the room and plainly not one of the
      seven. */

@@ -13,6 +13,7 @@ import { verifyRequest, type VerifiedCaller } from '@alaap/service-auth';
 import type { AuditClient } from '@alaap/audit-client';
 import { z } from 'zod';
 
+import { AvatarLook } from '../domain/avatar.ts';
 import type { HandlePolicy } from '../domain/handle.ts';
 import type { PersonaRepository } from '../infrastructure/personas.ts';
 
@@ -166,6 +167,37 @@ export function createApp(deps: AppDeps): Express {
         return;
       }
       res.status(200).json({ persona });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  /**
+   * Save the caller's avatar look. The pseudonym comes from the signed header, never
+   * the body, so the only persona anyone can restyle is their own.
+   *
+   * Not audited. The look is a cosmetic choice the member makes about their own
+   * public persona, like a theme; recording each change would put a log of somebody
+   * fiddling with their hair into a trail staff read.
+   */
+  app.post('/api/pseudonym/me/avatar', gated, async (req, res, next) => {
+    try {
+      const pseudoId = req.caller?.pseudoId;
+      if (pseudoId === undefined) {
+        res.status(401).json({ error: { code: 'no_session' } });
+        return;
+      }
+      const parsed = AvatarLook.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: { code: 'invalid_request' } });
+        return;
+      }
+      const avatarLook = await deps.personas.setAvatarLook(pseudoId, parsed.data);
+      if (avatarLook === undefined) {
+        res.status(404).json({ error: { code: 'no_persona' } });
+        return;
+      }
+      res.status(200).json({ avatarLook });
     } catch (err) {
       next(err);
     }

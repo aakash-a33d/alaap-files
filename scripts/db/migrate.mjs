@@ -88,6 +88,10 @@ const PLAN = [
   // on an already-granted table needs no further privilege.
   { instance: 'shared', db: 'clinical_vault', file: 'database/migrations/clinical-vault/0002_stress_score.sql' },
 
+  // The member's chosen group-session portrait, on the persona. Same as 0002_stress_score:
+  // a new column on `pseudo_profiles`, which 0001_roles.shared.sql already grants on.
+  { instance: 'shared', db: 'community_vault', file: 'database/migrations/community-vault/0006_avatar_look.sql' },
+
   // --- later privilege changes ---------------------------------------------
   { instance: 'shared', db: 'postgres', file: 'database/policies/roles-grants/0008_reports_to_moderation.sql' },
   { instance: 'shared', db: 'postgres', file: 'database/policies/roles-grants/0009_retention.sql' },

@@ -1,13 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BUILDER } from '../../../content/groups'
 import {
-  CIRCLE_COLOURS,
+  BACKDROPS,
+  COVERED,
+  HAIR_SHADES,
   HAIR_STYLES,
+  OUTFITS,
   SKIN_TONES,
-  type Face,
-  type FaceKey,
-  type HairStyle,
+  type AvatarLook,
+  type FacialHair,
 } from '../model/avatar'
+import { saveMyLook, useMyLook } from '../model/myLook'
 import { Avatar } from './Avatar'
 import { ParticipantCircle } from './ParticipantCircle'
 import {
@@ -22,42 +25,75 @@ import {
 /* ============================================================================
    1i — the avatar builder.
 
-   Four choices and no more: the character, the hair, the skin, the colour of
-   the circle you sit in. A builder with twenty sliders would take twenty
-   minutes and produce something the member then feels obliged to defend; four
-   choices take under a minute and produce a stand-in.
+   Three choices that matter — hair, skin, outfit — and a few small ones under
+   them. A builder with twenty sliders would take twenty minutes and produce
+   something the member then feels obliged to defend; this takes under a
+   minute and produces a stand-in.
 
-   Every tile shows the member's own character with exactly one part swapped,
-   never a generic model, so what a tile is offering is unmistakable. The
-   preview is the same drawing at the size it appears in the circle, so nobody
-   is surprised by their own avatar in the first session.
+   Every hair and outfit tile shows the member's own portrait with exactly one
+   part swapped, never a generic model, so what a tile is offering is
+   unmistakable. The preview is the same drawing at the size it appears in the
+   circle, so nobody is surprised by their own avatar in the first session.
+
+   The look is saved to the member's persona — the pseudonymous profile, never
+   the account — and the circle, the chat and the presence card all read it
+   from there.
    ========================================================================= */
-
-const BASE_FACES: FaceKey[] = ['wren', 'pip', 'marlow', 'sable', 'corvo', 'juniper']
 
 const SWATCH_ON = 'border-[1.5px] border-[var(--gr-terra)]'
 const SWATCH_OFF = 'border border-[var(--gr-line-strong)] hover:border-[var(--gr-terra-edge)]'
+const DOT_ON = '0 0 0 2px var(--app-ground), 0 0 0 3.5px var(--gr-terra)'
+const CHIP = 'inline-flex min-h-8 items-center rounded-full px-3.5 text-[0.72rem] transition-colors'
+const CHIP_ON = 'bg-[var(--app-ink)] text-[var(--app-ground)]'
+const CHIP_OFF =
+  'bg-[var(--gr-paper)] text-[var(--app-muted)] border border-[var(--gr-line-strong)] hover:border-[var(--gr-terra-edge)]'
+
+const FACIAL: { id: FacialHair; label: string }[] = [
+  { id: 'none', label: 'None' },
+  { id: 'stubble', label: 'Stubble' },
+  { id: 'beard', label: 'Beard' },
+]
+
+const pick = <T,>(xs: readonly T[]) => xs[Math.floor(Math.random() * xs.length)]
 
 export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
-  const [face, setFace] = useState<FaceKey>('wren')
-  const [hair, setHair] = useState<HairStyle>('long')
-  const [skin, setSkin] = useState(1)
-  const [colour, setColour] = useState(0)
-  const [motion, setMotion] = useState('move')
+  const saved = useMyLook()
+  const [look, setLook] = useState<AvatarLook>(saved)
   const [preview, setPreview] = useState(false)
+  const [motion, setMotion] = useState('move')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(false)
 
-  /* The four choices, collapsed into the one override every tile and the
-     preview are drawn from. */
-  const tweak: Partial<Face> = {
-    style: hair,
-    skin: SKIN_TONES[skin].skin,
-    skinShade: SKIN_TONES[skin].skinShade,
-    top: CIRCLE_COLOURS[colour].top,
-    bg: CIRCLE_COLOURS[colour].bg,
+  /* The saved look can arrive after the builder opens. Until the member
+     touches something, follow it, so they start from what they chose last
+     time rather than from the default. */
+  const touched = useRef(false)
+  useEffect(() => {
+    if (!touched.current) setLook(saved)
+  }, [saved])
+
+  const set = (part: Partial<AvatarLook>) => {
+    touched.current = true
+    setLook((l) => ({ ...l, ...part }))
   }
 
+  async function save() {
+    setSaving(true)
+    setError(false)
+    try {
+      await saveMyLook(look)
+      onNext()
+    } catch {
+      setError(true)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const covered = COVERED.has(look.hair)
+
   return (
-    <div className="mx-auto w-full max-w-[960px] overflow-hidden rounded-[20px] shadow-[var(--gr-lift)] lg:grid lg:grid-cols-[340px_minmax(0,1fr)]">
+    <div className="mx-auto w-full max-w-[1000px] overflow-hidden rounded-[20px] shadow-[var(--gr-lift)] lg:grid lg:grid-cols-[340px_minmax(0,1fr)]">
       {/* ---- what the group sees ----------------------------------------- */}
       <div className="flex flex-col items-center gap-4 bg-[var(--gr-sand)] px-7 py-8">
         <Eyebrow>{preview ? 'your seat in the room' : 'how the group sees you'}</Eyebrow>
@@ -66,10 +102,10 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
             circle it is actually seen in. The second is the one that decides
             whether a choice was any good. */}
         {preview ? (
-          <ParticipantCircle size={244} speaking={-1} labels={false} you={tweak} />
+          <ParticipantCircle size={244} speaking={-1} labels={false} you={look} />
         ) : (
           <span className="rounded-full shadow-[0_8px_30px_rgb(26_24_20/0.12)]">
-            <Avatar face={face} tweak={tweak} size={196} />
+            <Avatar look={look} size={196} />
           </span>
         )}
         <div className="text-center">
@@ -91,12 +127,15 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
           </button>
           <button
             type="button"
-            onClick={() => {
-              setFace(BASE_FACES[Math.floor(Math.random() * BASE_FACES.length)])
-              setHair(HAIR_STYLES[Math.floor(Math.random() * HAIR_STYLES.length)])
-              setSkin(Math.floor(Math.random() * SKIN_TONES.length))
-              setColour(Math.floor(Math.random() * CIRCLE_COLOURS.length))
-            }}
+            onClick={() =>
+              set({
+                hair: pick(HAIR_STYLES).id,
+                hairShade: pick(HAIR_SHADES).id,
+                skin: pick(SKIN_TONES).id,
+                outfit: pick(OUTFITS).id,
+                backdrop: pick(BACKDROPS).id,
+              })
+            }
             className="inline-flex min-h-9 items-center rounded-full bg-[var(--gr-paper)] px-4 text-[0.74rem] text-[var(--app-ink)] transition-colors hover:bg-white"
           >
             Shuffle
@@ -107,7 +146,7 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
         </p>
       </div>
 
-      {/* ---- the four choices -------------------------------------------- */}
+      {/* ---- the choices -------------------------------------------------- */}
       <div className="bg-[var(--app-ground)] px-6 py-7 sm:px-8">
         <Title>{BUILDER.title}</Title>
         <p className="mt-2 max-w-[52ch] text-[0.8rem] leading-relaxed text-[var(--app-faint)]">
@@ -115,56 +154,95 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
         </p>
 
         <fieldset className="mt-6 border-0 p-0">
-          <div className="flex items-baseline justify-between gap-2">
-            <legend className="float-left">
-              <Eyebrow>face</Eyebrow>
-            </legend>
-            <span className="ml-auto text-[0.7rem] text-[var(--app-dim)]">
-              {BASE_FACES.indexOf(face) + 1} of {BASE_FACES.length}
-            </span>
-          </div>
-          <div
-            role="radiogroup"
-            aria-label="Face"
-            className="mt-2.5 flex flex-wrap items-center gap-2.5"
-          >
-            {BASE_FACES.map((k) => (
+          <legend>
+            <Eyebrow>hairstyle</Eyebrow>
+          </legend>
+          <div role="radiogroup" aria-label="Hairstyle" className="mt-2.5 flex flex-wrap gap-2.5">
+            {HAIR_STYLES.map((h) => (
               <button
-                key={k}
+                key={h.id}
                 type="button"
                 role="radio"
-                aria-checked={face === k}
-                aria-label={`Face ${k}`}
-                onClick={() => setFace(k)}
-                className={`rounded-[15px] p-0.5 ${face === k ? SWATCH_ON : SWATCH_OFF}`}
+                aria-checked={look.hair === h.id}
+                aria-label={h.label}
+                title={h.label}
+                onClick={() => set({ hair: h.id })}
+                className={`rounded-[15px] p-0.5 ${look.hair === h.id ? SWATCH_ON : SWATCH_OFF}`}
               >
-                <Avatar face={k} tweak={{ style: hair }} size={52} shape="squircle" />
+                <Avatar look={{ ...look, hair: h.id }} size={56} shape="squircle" />
               </button>
             ))}
           </div>
-          <p className={`${MONO} mt-2 text-[0.6rem] text-[var(--app-dim)]`}>{BUILDER.faceNote}</p>
+          <p className={`${MONO} mt-2 text-[0.6rem] text-[var(--app-dim)]`}>{BUILDER.hairNote}</p>
+
+          <div
+            role="radiogroup"
+            aria-label={covered ? 'Brow and beard colour' : 'Hair colour'}
+            className="mt-3 flex flex-wrap items-center gap-2"
+          >
+            <span className="mr-1 text-[0.7rem] text-[var(--app-dim)]">
+              {covered ? 'brows' : 'colour'}
+            </span>
+            {HAIR_SHADES.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                role="radio"
+                aria-checked={look.hairShade === s.id}
+                aria-label={s.label}
+                title={s.label}
+                onClick={() => set({ hairShade: s.id })}
+                className="h-[26px] w-[26px] rounded-full"
+                style={{
+                  background: `oklch(${s.lch[0]} ${s.lch[1]} ${s.lch[2]})`,
+                  boxShadow: look.hairShade === s.id ? DOT_ON : undefined,
+                }}
+              />
+            ))}
+          </div>
         </fieldset>
 
         <fieldset className="mt-5 border-0 p-0">
           <legend>
-            <Eyebrow>hair</Eyebrow>
+            <Eyebrow>skin colour</Eyebrow>
           </legend>
-          <div
-            role="radiogroup"
-            aria-label="Hair"
-            className="mt-2.5 flex flex-wrap items-center gap-2.5"
-          >
-            {HAIR_STYLES.map((h) => (
+          <div role="radiogroup" aria-label="Skin colour" className="mt-2.5 flex flex-wrap gap-2">
+            {SKIN_TONES.map((t) => (
               <button
-                key={h}
+                key={t.id}
                 type="button"
                 role="radio"
-                aria-checked={hair === h}
-                aria-label={`Hair ${h}`}
-                onClick={() => setHair(h)}
-                className={`rounded-[15px] p-0.5 ${hair === h ? SWATCH_ON : SWATCH_OFF}`}
+                aria-checked={look.skin === t.id}
+                aria-label={t.label}
+                title={t.label}
+                onClick={() => set({ skin: t.id })}
+                className="h-[30px] w-[30px] rounded-full"
+                style={{
+                  background: `radial-gradient(circle at 38% 34%, oklch(${t.lch[0] + 0.06} ${t.lch[1]} ${t.lch[2]}), oklch(${t.lch[0]} ${t.lch[1]} ${t.lch[2]}) 55%, oklch(${t.lch[0] - 0.08} ${t.lch[1]} ${t.lch[2]}))`,
+                  boxShadow: look.skin === t.id ? DOT_ON : undefined,
+                }}
+              />
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="mt-5 border-0 p-0">
+          <legend>
+            <Eyebrow>outfit</Eyebrow>
+          </legend>
+          <div role="radiogroup" aria-label="Outfit" className="mt-2.5 flex flex-wrap gap-2.5">
+            {OUTFITS.map((o) => (
+              <button
+                key={o.id}
+                type="button"
+                role="radio"
+                aria-checked={look.outfit === o.id}
+                aria-label={o.label}
+                title={o.label}
+                onClick={() => set({ outfit: o.id })}
+                className={`rounded-[15px] p-0.5 ${look.outfit === o.id ? SWATCH_ON : SWATCH_OFF}`}
               >
-                <Avatar face={face} tweak={{ ...tweak, style: h }} size={52} shape="squircle" />
+                <Avatar look={{ ...look, outfit: o.id }} size={56} shape="squircle" />
               </button>
             ))}
           </div>
@@ -173,24 +251,22 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
           <fieldset className="border-0 p-0">
             <legend>
-              <Eyebrow>skin</Eyebrow>
+              <Eyebrow>backdrop</Eyebrow>
             </legend>
-            <div role="radiogroup" aria-label="Skin" className="mt-2.5 flex flex-wrap gap-2">
-              {SKIN_TONES.map((t, i) => (
+            <div role="radiogroup" aria-label="Backdrop" className="mt-2.5 flex flex-wrap gap-2">
+              {BACKDROPS.map((b) => (
                 <button
-                  key={t.skin}
+                  key={b.id}
                   type="button"
                   role="radio"
-                  aria-checked={skin === i}
-                  aria-label={`Skin tone ${i + 1}`}
-                  onClick={() => setSkin(i)}
+                  aria-checked={look.backdrop === b.id}
+                  aria-label={b.label}
+                  title={b.label}
+                  onClick={() => set({ backdrop: b.id })}
                   className="h-[30px] w-[30px] rounded-full"
                   style={{
-                    background: t.skin,
-                    boxShadow:
-                      skin === i
-                        ? '0 0 0 2px var(--app-ground), 0 0 0 3.5px var(--gr-terra)'
-                        : undefined,
+                    background: `linear-gradient(135deg, ${b.from}, ${b.to})`,
+                    boxShadow: look.backdrop === b.id ? DOT_ON : undefined,
                   }}
                 />
               ))}
@@ -199,34 +275,49 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
 
           <fieldset className="border-0 p-0">
             <legend>
-              <Eyebrow>circle colour</Eyebrow>
+              <Eyebrow>facial hair</Eyebrow>
             </legend>
-            <div
-              role="radiogroup"
-              aria-label="Circle colour"
-              className="mt-2.5 flex flex-wrap gap-2"
-            >
-              {CIRCLE_COLOURS.map((c, i) => (
+            <div role="radiogroup" aria-label="Facial hair" className="mt-2.5 flex flex-wrap gap-1.5">
+              {FACIAL.map((f) => (
                 <button
-                  key={c.top}
+                  key={f.id}
                   type="button"
                   role="radio"
-                  aria-checked={colour === i}
-                  aria-label={`Circle colour ${i + 1}`}
-                  onClick={() => setColour(i)}
-                  className="h-[30px] w-[30px] rounded-full"
-                  style={{
-                    background: c.top,
-                    boxShadow:
-                      colour === i
-                        ? '0 0 0 2px var(--app-ground), 0 0 0 3.5px var(--gr-terra)'
-                        : undefined,
-                  }}
-                />
+                  aria-checked={look.facialHair === f.id}
+                  onClick={() => set({ facialHair: f.id })}
+                  className={`${CHIP} ${look.facialHair === f.id ? CHIP_ON : CHIP_OFF}`}
+                >
+                  {f.label}
+                </button>
               ))}
             </div>
           </fieldset>
         </div>
+
+        <fieldset className="mt-5 border-0 p-0">
+          <legend>
+            <Eyebrow>extras</Eyebrow>
+          </legend>
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {(
+              [
+                ['glasses', 'Glasses'],
+                ['bindi', 'Bindi'],
+                ['earrings', 'Earrings'],
+              ] as const
+            ).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={look[k]}
+                onClick={() => set({ [k]: !look[k] })}
+                className={`${CHIP} ${look[k] ? CHIP_ON : CHIP_OFF}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
 
         {/* Whether the drawing moves is a real accessibility choice, not a
             flourish, so it is offered here rather than assumed. */}
@@ -268,12 +359,18 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
           </div>
         </fieldset>
 
-        <div className="mt-6 flex flex-wrap justify-end gap-2.5">
+        <div className="mt-6 flex flex-wrap items-center justify-end gap-2.5">
+          <p
+            role="status"
+            className={`mr-auto text-[0.72rem] ${error ? 'text-[var(--gr-terra-ink)]' : 'text-[var(--app-dim)]'}`}
+          >
+            {error ? "Couldn't save just now. Your choices are still here — try again." : BUILDER.saved}
+          </p>
           <button type="button" onClick={onSkip} className={PILL_QUIET}>
             Skip for now
           </button>
-          <button type="button" onClick={onNext} className={PILL_SOLID}>
-            Use this avatar
+          <button type="button" onClick={save} disabled={saving} className={PILL_SOLID}>
+            {saving ? 'Saving…' : 'Use this avatar'}
           </button>
         </div>
       </div>

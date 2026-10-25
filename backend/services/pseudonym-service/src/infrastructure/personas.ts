@@ -20,12 +20,15 @@ import {
   normaliseHandle,
   type HandlePolicy,
 } from '../domain/handle.ts';
+import type { AvatarLook } from '../domain/avatar.ts';
 
 export interface Persona {
   pseudoId: number;
   handle: string;
   avatarSeed: string;
   avatarStyle: string;
+  /** The member's chosen group portrait, or null if they never chose one. */
+  avatarLook: AvatarLook | null;
   status: string;
   createdAt: string;
 }
@@ -35,6 +38,7 @@ interface Row {
   handle: string;
   avatar_seed: string;
   avatar_style: string;
+  avatar_look: AvatarLook | null;
   status: string;
   created_at: Date;
 }
@@ -45,12 +49,13 @@ function toPersona(row: Row): Persona {
     handle: row.handle,
     avatarSeed: row.avatar_seed,
     avatarStyle: row.avatar_style,
+    avatarLook: row.avatar_look,
     status: row.status,
     createdAt: row.created_at.toISOString(),
   };
 }
 
-const COLUMNS = `pseudo_id, handle, avatar_seed, avatar_style, status, created_at`;
+const COLUMNS = `pseudo_id, handle, avatar_seed, avatar_style, avatar_look, status, created_at`;
 const SELECT = `SELECT ${COLUMNS} FROM pseudo_profiles`;
 
 export interface CreateResult {
@@ -156,16 +161,37 @@ export class PersonaRepository {
     return row === undefined ? undefined : toPersona(row);
   }
 
-  /** The handle, and when it was issued. It is the whole of the public identity. */
-  async exportFor(pseudoId: number): Promise<{ handle: string; createdAt: string } | undefined> {
-    const { rows } = await this.pool.query<{ handle: string; created_at: Date }>(
-      `SELECT handle, created_at FROM pseudo_profiles WHERE pseudo_id = $1`,
-      [pseudoId],
+  /**
+   * Replace the member's avatar look. The caller has already validated it against
+   * domain/avatar.ts; the row is matched on the signed pseudo_id, so a member can only
+   * ever change their own. Returns undefined if there is no persona to change.
+   */
+  async setAvatarLook(pseudoId: number, look: AvatarLook): Promise<AvatarLook | undefined> {
+    const { rows } = await this.pool.query<{ avatar_look: AvatarLook }>(
+      `UPDATE pseudo_profiles SET avatar_look = $2::jsonb WHERE pseudo_id = $1 RETURNING avatar_look`,
+      [pseudoId, JSON.stringify(look)],
     );
+    return rows[0]?.avatar_look;
+  }
+
+  /**
+   * The handle, when it was issued, and the avatar the member chose. Together they are
+   * the whole of the public identity.
+   */
+  async exportFor(
+    pseudoId: number,
+  ): Promise<{ handle: string; createdAt: string; avatarLook: AvatarLook | null } | undefined> {
+    const { rows } = await this.pool.query<{
+      handle: string;
+      created_at: Date;
+      avatar_look: AvatarLook | null;
+    }>(`SELECT handle, created_at, avatar_look FROM pseudo_profiles WHERE pseudo_id = $1`, [
+      pseudoId,
+    ]);
     const row = rows[0];
     return row === undefined
       ? undefined
-      : { handle: row.handle, createdAt: row.created_at.toISOString() };
+      : { handle: row.handle, createdAt: row.created_at.toISOString(), avatarLook: row.avatar_look };
   }
 
   /**
