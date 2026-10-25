@@ -1,44 +1,39 @@
 /**
- * The avatar look is the one thing on the persona a member writes themselves, and
- * every member of their group sees it. So the schema is the whole of the review: it
- * must take every look the builder can produce and refuse anything else.
+ * The avatar is the one thing on the persona a member writes themselves, and every
+ * member of their group sees it. So the schema is the whole of the review: it must
+ * take each of the twelve portraits and refuse anything else.
  */
 
 import { describe, expect, it } from 'vitest';
 
-import { AvatarLook } from '../src/domain/avatar.ts';
-
-const LOOK = {
-  hair: 'bun',
-  hairShade: 'silver',
-  skin: 'tan',
-  outfit: 'saree',
-  backdrop: 'sage',
-  facialHair: 'none',
-  glasses: true,
-  bindi: true,
-  earrings: true,
-};
+import { AvatarLook, PORTRAIT_IDS } from '../src/domain/avatar.ts';
 
 describe('AvatarLook', () => {
-  it('accepts a look the builder produces', () => {
-    expect(AvatarLook.safeParse(LOOK).success).toBe(true);
+  it('knows twelve portraits, a woman and a man at six ages', () => {
+    expect(PORTRAIT_IDS).toHaveLength(12);
+    expect(PORTRAIT_IDS).toContain('woman-older');
+    expect(PORTRAIT_IDS).toContain('man-child');
   });
 
-  it('refuses a key it does not know', () => {
-    expect(AvatarLook.safeParse({ ...LOOK, outfit: 'tuxedo' }).success).toBe(false);
+  it('accepts every portrait', () => {
+    for (const portrait of PORTRAIT_IDS) {
+      expect(AvatarLook.safeParse({ portrait }).success).toBe(true);
+    }
   });
 
-  it('refuses a colour in place of a key', () => {
-    expect(AvatarLook.safeParse({ ...LOOK, skin: 'oklch(0.7 0.06 58)' }).success).toBe(false);
+  it('refuses an id it does not know', () => {
+    expect(AvatarLook.safeParse({ portrait: 'woman-40s' }).success).toBe(false);
+  });
+
+  it('refuses a URL in place of an id', () => {
+    expect(AvatarLook.safeParse({ portrait: 'https://example.com/me.png' }).success).toBe(false);
   });
 
   it('refuses extra fields, so nothing free-form rides along to the group', () => {
-    expect(AvatarLook.safeParse({ ...LOOK, note: 'hello' }).success).toBe(false);
+    expect(AvatarLook.safeParse({ portrait: 'man-30s', note: 'hello' }).success).toBe(false);
   });
 
-  it('refuses a partial look', () => {
-    const { hair: _hair, ...rest } = LOOK;
-    expect(AvatarLook.safeParse(rest).success).toBe(false);
+  it('refuses a look saved by the earlier drawn builder', () => {
+    expect(AvatarLook.safeParse({ hair: 'bun', skin: 'tan', outfit: 'saree' }).success).toBe(false);
   });
 });

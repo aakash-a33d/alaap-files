@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import { SEATS, type Seat } from '../../../content/groups'
-import { MEMBER_LOOKS, paletteOf, type AvatarLook } from '../model/avatar'
+import { MEMBER_LOOKS, portraitOf, type AvatarLook } from '../model/avatar'
 import { useMyLook } from '../model/myLook'
 import { usePrefersReducedMotion } from '../model/session'
 import { AvatarArt } from './Avatar'
@@ -264,7 +264,7 @@ function SeatFigure({
     >
       <div
         className="relative h-full w-full overflow-hidden rounded-full transition-shadow duration-500"
-        style={{ background: look ? paletteOf(look).backdrop.seat : seat.colour, boxShadow: shadow }}
+        style={{ background: look ? portraitOf(look).seat : seat.colour, boxShadow: shadow }}
       >
         <SeatMedia seat={seat} initialSize={on ? '1.9em' : '1.02em'} you={you} />
         <span

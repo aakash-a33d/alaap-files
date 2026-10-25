@@ -1,60 +1,38 @@
 import { useEffect, useRef, useState } from 'react'
 import { BUILDER } from '../../../content/groups'
 import {
-  BACKDROPS,
-  COVERED,
-  HAIR_SHADES,
-  HAIR_STYLES,
-  OUTFITS,
-  SKIN_TONES,
+  AGE_BANDS,
+  GENDERS,
+  PORTRAITS,
+  describe,
+  portraitOf,
   type AvatarLook,
-  type FacialHair,
 } from '../model/avatar'
 import { saveMyLook, useMyLook } from '../model/myLook'
-import { Avatar } from './Avatar'
+import { AvatarArt } from './Avatar'
 import { ParticipantCircle } from './ParticipantCircle'
-import {
-  Eyebrow,
-  MONO,
-  PILL_QUIET,
-  PILL_SOLID,
-  SERIF,
-  Title,
-} from './parts'
+import { Eyebrow, MONO, PILL_QUIET, PILL_SOLID, SERIF, Title } from './parts'
 
 /* ============================================================================
-   1i — the avatar builder.
+   1i — choosing an avatar.
 
-   Three choices that matter — hair, skin, outfit — and a few small ones under
-   them. A builder with twenty sliders would take twenty minutes and produce
-   something the member then feels obliged to defend; this takes under a
-   minute and produces a stand-in.
+   Twelve portraits laid out as a table: women on one row and men on the
+   other, one column per age from child to elder. You find yourself, or who
+   you would like to be met as, by reading along a row. There is nothing to
+   build.
 
-   Every hair and outfit tile shows the member's own portrait with exactly one
-   part swapped, never a generic model, so what a tile is offering is
-   unmistakable. The preview is the same drawing at the size it appears in the
-   circle, so nobody is surprised by their own avatar in the first session.
+   The preview panel takes the colour of the chosen portrait's own backdrop,
+   so the panel and the portrait in it read as one picture. The preview can
+   also show the portrait in the circle at the size the group will actually
+   see it, which is the size that decides whether a choice works.
 
-   The look is saved to the member's persona — the pseudonymous profile, never
-   the account — and the circle, the chat and the presence card all read it
+   The choice is saved to the member's persona (the pseudonymous profile,
+   never the account). The circle, the chat and the presence card all read it
    from there.
    ========================================================================= */
 
 const SWATCH_ON = 'border-[1.5px] border-[var(--gr-terra)]'
 const SWATCH_OFF = 'border border-[var(--gr-line-strong)] hover:border-[var(--gr-terra-edge)]'
-const DOT_ON = '0 0 0 2px var(--app-ground), 0 0 0 3.5px var(--gr-terra)'
-const CHIP = 'inline-flex min-h-8 items-center rounded-full px-3.5 text-[0.72rem] transition-colors'
-const CHIP_ON = 'bg-[var(--app-ink)] text-[var(--app-ground)]'
-const CHIP_OFF =
-  'bg-[var(--gr-paper)] text-[var(--app-muted)] border border-[var(--gr-line-strong)] hover:border-[var(--gr-terra-edge)]'
-
-const FACIAL: { id: FacialHair; label: string }[] = [
-  { id: 'none', label: 'None' },
-  { id: 'stubble', label: 'Stubble' },
-  { id: 'beard', label: 'Beard' },
-]
-
-const pick = <T,>(xs: readonly T[]) => xs[Math.floor(Math.random() * xs.length)]
 
 export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
   const saved = useMyLook()
@@ -64,18 +42,13 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(false)
 
-  /* The saved look can arrive after the builder opens. Until the member
-     touches something, follow it, so they start from what they chose last
-     time rather than from the default. */
+  /* The saved choice can arrive after the window opens. Until the member
+     picks something, follow it, so they start from what they chose last time
+     rather than from the default. */
   const touched = useRef(false)
   useEffect(() => {
     if (!touched.current) setLook(saved)
   }, [saved])
-
-  const set = (part: Partial<AvatarLook>) => {
-    touched.current = true
-    setLook((l) => ({ ...l, ...part }))
-  }
 
   async function save() {
     setSaving(true)
@@ -90,238 +63,129 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
     }
   }
 
-  const covered = COVERED.has(look.hair)
+  const chosen = portraitOf(look)
 
   return (
     <div className="mx-auto w-full max-w-[1000px] overflow-hidden rounded-[20px] shadow-[var(--gr-lift)] lg:grid lg:grid-cols-[340px_minmax(0,1fr)]">
       {/* ---- what the group sees ----------------------------------------- */}
-      <div className="flex flex-col items-center gap-4 bg-[var(--gr-sand)] px-7 py-8">
+      <div
+        className="flex flex-col items-center gap-4 px-7 py-8 transition-[background] duration-500"
+        style={{
+          /* the portrait's own backdrop, lightened towards the page, so the
+             panel continues the picture rather than framing it */
+          background: `linear-gradient(170deg, color-mix(in oklab, ${chosen.seat} 55%, white) 0%, color-mix(in oklab, ${chosen.seat} 22%, var(--gr-sand)) 100%)`,
+        }}
+      >
         <Eyebrow>{preview ? 'your seat in the room' : 'how the group sees you'}</Eyebrow>
-        {/* Two sizes of the same answer: the drawing at the size you judge it
-            by, and the drawing at the size it is actually seen at, in the
-            circle it is actually seen in. The second is the one that decides
-            whether a choice was any good. */}
         {preview ? (
           <ParticipantCircle size={244} speaking={-1} labels={false} you={look} />
         ) : (
-          <span className="rounded-full shadow-[0_8px_30px_rgb(26_24_20/0.12)]">
-            <Avatar look={look} size={196} />
+          <span
+            className="block h-[208px] w-[208px] overflow-hidden rounded-full ring-4 ring-white/70 shadow-[0_14px_40px_rgb(26_24_20/0.22)]"
+            style={{ background: chosen.seat }}
+          >
+            <AvatarArt look={look} label />
           </span>
         )}
         <div className="text-center">
           <p className={`${SERIF} text-[1.3rem] text-[var(--app-ink)]`}>Wren</p>
           <p
-            className={`${MONO} mt-1 text-[0.6rem] uppercase tracking-[0.09em] text-[var(--gr-green)]`}
+            className={`${MONO} mt-1 text-[0.6rem] uppercase tracking-[0.09em] text-[var(--app-muted)]`}
           >
-            anonymous · voice only
+            {describe(chosen)}
           </p>
         </div>
-        <div className="flex flex-wrap justify-center gap-2">
-          <button
-            type="button"
-            aria-pressed={preview}
-            onClick={() => setPreview((p) => !p)}
-            className="inline-flex min-h-9 items-center rounded-full bg-[var(--gr-paper)] px-4 text-[0.74rem] text-[var(--app-ink)] transition-colors hover:bg-white"
-          >
-            {preview ? 'Back to the avatar' : 'Preview in circle'}
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              set({
-                hair: pick(HAIR_STYLES).id,
-                hairShade: pick(HAIR_SHADES).id,
-                skin: pick(SKIN_TONES).id,
-                outfit: pick(OUTFITS).id,
-                backdrop: pick(BACKDROPS).id,
-              })
-            }
-            className="inline-flex min-h-9 items-center rounded-full bg-[var(--gr-paper)] px-4 text-[0.74rem] text-[var(--app-ink)] transition-colors hover:bg-white"
-          >
-            Shuffle
-          </button>
-        </div>
-        <p className="mt-auto pt-5 text-center text-[0.72rem] leading-relaxed text-[var(--app-muted)]">
+        <button
+          type="button"
+          aria-pressed={preview}
+          onClick={() => setPreview((p) => !p)}
+          className="inline-flex min-h-9 items-center rounded-full bg-white/80 px-4 text-[0.74rem] text-[var(--app-ink)] transition-colors hover:bg-white"
+        >
+          {preview ? 'Back to the portrait' : 'Preview in circle'}
+        </button>
+        <p className="mt-auto pt-5 text-center text-[0.72rem] leading-relaxed text-[var(--app-ink)]/70">
           {BUILDER.carried}
         </p>
       </div>
 
-      {/* ---- the choices -------------------------------------------------- */}
-      <div className="bg-[var(--app-ground)] px-6 py-7 sm:px-8">
+      {/* ---- the twelve -------------------------------------------------- */}
+      <div className="bg-[var(--app-ground)] px-5 py-7 sm:px-8">
         <Title>{BUILDER.title}</Title>
         <p className="mt-2 max-w-[52ch] text-[0.8rem] leading-relaxed text-[var(--app-faint)]">
           {BUILDER.blurb}
         </p>
 
-        <fieldset className="mt-6 border-0 p-0">
-          <legend>
-            <Eyebrow>hairstyle</Eyebrow>
-          </legend>
-          <div role="radiogroup" aria-label="Hairstyle" className="mt-2.5 flex flex-wrap gap-2.5">
-            {HAIR_STYLES.map((h) => (
-              <button
-                key={h.id}
-                type="button"
-                role="radio"
-                aria-checked={look.hair === h.id}
-                aria-label={h.label}
-                title={h.label}
-                onClick={() => set({ hair: h.id })}
-                className={`rounded-[15px] p-0.5 ${look.hair === h.id ? SWATCH_ON : SWATCH_OFF}`}
+        <div role="radiogroup" aria-label="Avatar" className="mt-6">
+          {/* Age headings once, above both rows. On a phone the table folds
+              to three columns and each tile carries its own age instead. */}
+          <div className="hidden grid-cols-[64px_repeat(6,minmax(0,1fr))] gap-2 sm:grid">
+            <span />
+            {AGE_BANDS.map((a) => (
+              <span
+                key={a.id}
+                className={`${MONO} text-center text-[0.58rem] uppercase leading-tight tracking-[0.08em] text-[var(--app-dim)]`}
               >
-                <Avatar look={{ ...look, hair: h.id }} size={56} shape="squircle" />
-              </button>
+                {a.label}
+              </span>
             ))}
           </div>
-          <p className={`${MONO} mt-2 text-[0.6rem] text-[var(--app-dim)]`}>{BUILDER.hairNote}</p>
 
-          <div
-            role="radiogroup"
-            aria-label={covered ? 'Brow and beard colour' : 'Hair colour'}
-            className="mt-3 flex flex-wrap items-center gap-2"
-          >
-            <span className="mr-1 text-[0.7rem] text-[var(--app-dim)]">
-              {covered ? 'brows' : 'colour'}
-            </span>
-            {HAIR_SHADES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                role="radio"
-                aria-checked={look.hairShade === s.id}
-                aria-label={s.label}
-                title={s.label}
-                onClick={() => set({ hairShade: s.id })}
-                className="h-[26px] w-[26px] rounded-full"
-                style={{
-                  background: `oklch(${s.lch[0]} ${s.lch[1]} ${s.lch[2]})`,
-                  boxShadow: look.hairShade === s.id ? DOT_ON : undefined,
-                }}
-              />
-            ))}
-          </div>
-        </fieldset>
-
-        <fieldset className="mt-5 border-0 p-0">
-          <legend>
-            <Eyebrow>skin colour</Eyebrow>
-          </legend>
-          <div role="radiogroup" aria-label="Skin colour" className="mt-2.5 flex flex-wrap gap-2">
-            {SKIN_TONES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="radio"
-                aria-checked={look.skin === t.id}
-                aria-label={t.label}
-                title={t.label}
-                onClick={() => set({ skin: t.id })}
-                className="h-[30px] w-[30px] rounded-full"
-                style={{
-                  background: `radial-gradient(circle at 38% 34%, oklch(${t.lch[0] + 0.06} ${t.lch[1]} ${t.lch[2]}), oklch(${t.lch[0]} ${t.lch[1]} ${t.lch[2]}) 55%, oklch(${t.lch[0] - 0.08} ${t.lch[1]} ${t.lch[2]}))`,
-                  boxShadow: look.skin === t.id ? DOT_ON : undefined,
-                }}
-              />
-            ))}
-          </div>
-        </fieldset>
-
-        <fieldset className="mt-5 border-0 p-0">
-          <legend>
-            <Eyebrow>outfit</Eyebrow>
-          </legend>
-          <div role="radiogroup" aria-label="Outfit" className="mt-2.5 flex flex-wrap gap-2.5">
-            {OUTFITS.map((o) => (
-              <button
-                key={o.id}
-                type="button"
-                role="radio"
-                aria-checked={look.outfit === o.id}
-                aria-label={o.label}
-                title={o.label}
-                onClick={() => set({ outfit: o.id })}
-                className={`rounded-[15px] p-0.5 ${look.outfit === o.id ? SWATCH_ON : SWATCH_OFF}`}
-              >
-                <Avatar look={{ ...look, outfit: o.id }} size={56} shape="squircle" />
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
-        <div className="mt-5 grid gap-5 sm:grid-cols-2">
-          <fieldset className="border-0 p-0">
-            <legend>
-              <Eyebrow>backdrop</Eyebrow>
-            </legend>
-            <div role="radiogroup" aria-label="Backdrop" className="mt-2.5 flex flex-wrap gap-2">
-              {BACKDROPS.map((b) => (
-                <button
-                  key={b.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={look.backdrop === b.id}
-                  aria-label={b.label}
-                  title={b.label}
-                  onClick={() => set({ backdrop: b.id })}
-                  className="h-[30px] w-[30px] rounded-full"
-                  style={{
-                    background: `linear-gradient(135deg, ${b.from}, ${b.to})`,
-                    boxShadow: look.backdrop === b.id ? DOT_ON : undefined,
-                  }}
-                />
-              ))}
+          {GENDERS.map((g) => (
+            <div
+              key={g.id}
+              className="mt-3 grid grid-cols-3 items-center gap-x-2 gap-y-3 sm:grid-cols-[64px_repeat(6,minmax(0,1fr))]"
+            >
+              <span className="col-span-3 sm:col-span-1">
+                <Eyebrow>{g.label}</Eyebrow>
+              </span>
+              {PORTRAITS.filter((p) => p.gender === g.id).map((p) => {
+                const on = look.portrait === p.id
+                const age = AGE_BANDS.find((a) => a.id === p.age)!.label
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    aria-label={describe(p)}
+                    title={describe(p)}
+                    onClick={() => {
+                      touched.current = true
+                      setLook({ portrait: p.id })
+                    }}
+                    className="group flex flex-col items-center gap-1.5 rounded-[14px] py-1 focus-visible:outline-2 focus-visible:outline-[var(--gr-terra)]"
+                  >
+                    <span
+                      className={`block aspect-square w-full max-w-[76px] overflow-hidden rounded-full transition-[transform,box-shadow] duration-200 ${
+                        on ? 'scale-105' : 'group-hover:scale-[1.03]'
+                      }`}
+                      style={{
+                        background: p.seat,
+                        boxShadow: on
+                          ? '0 0 0 2.5px var(--app-ground), 0 0 0 4.5px var(--gr-terra), 0 8px 18px rgb(26 24 20 / 0.18)'
+                          : '0 2px 6px rgb(26 24 20 / 0.12)',
+                      }}
+                    >
+                      <AvatarArt look={{ portrait: p.id }} />
+                    </span>
+                    <span
+                      className={`${MONO} text-[0.56rem] uppercase tracking-[0.06em] sm:hidden ${
+                        on ? 'text-[var(--gr-terra-ink)]' : 'text-[var(--app-dim)]'
+                      }`}
+                    >
+                      {age}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
-          </fieldset>
-
-          <fieldset className="border-0 p-0">
-            <legend>
-              <Eyebrow>facial hair</Eyebrow>
-            </legend>
-            <div role="radiogroup" aria-label="Facial hair" className="mt-2.5 flex flex-wrap gap-1.5">
-              {FACIAL.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={look.facialHair === f.id}
-                  onClick={() => set({ facialHair: f.id })}
-                  className={`${CHIP} ${look.facialHair === f.id ? CHIP_ON : CHIP_OFF}`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          ))}
+          <p className={`${MONO} mt-3 text-[0.6rem] text-[var(--app-dim)]`}>{BUILDER.pickNote}</p>
         </div>
 
-        <fieldset className="mt-5 border-0 p-0">
-          <legend>
-            <Eyebrow>extras</Eyebrow>
-          </legend>
-          <div className="mt-2.5 flex flex-wrap gap-1.5">
-            {(
-              [
-                ['glasses', 'Glasses'],
-                ['bindi', 'Bindi'],
-                ['earrings', 'Earrings'],
-              ] as const
-            ).map(([k, label]) => (
-              <button
-                key={k}
-                type="button"
-                aria-pressed={look[k]}
-                onClick={() => set({ [k]: !look[k] })}
-                className={`${CHIP} ${look[k] ? CHIP_ON : CHIP_OFF}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
-        {/* Whether the drawing moves is a real accessibility choice, not a
+        {/* Whether the portrait moves is a real accessibility choice, not a
             flourish, so it is offered here rather than assumed. */}
-        <fieldset className="mt-5 border-0 p-0">
+        <fieldset className="mt-6 border-0 p-0">
           <legend>
             <Eyebrow>what it does in session</Eyebrow>
           </legend>
@@ -364,7 +228,7 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
             role="status"
             className={`mr-auto text-[0.72rem] ${error ? 'text-[var(--gr-terra-ink)]' : 'text-[var(--app-dim)]'}`}
           >
-            {error ? "Couldn't save just now. Your choices are still here — try again." : BUILDER.saved}
+            {error ? "Couldn't save just now. Your choice is still here, so try again." : BUILDER.saved}
           </p>
           <button type="button" onClick={onSkip} className={PILL_QUIET}>
             Skip for now

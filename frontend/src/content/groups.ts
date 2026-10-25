@@ -669,10 +669,10 @@ export const PRESENCE_CHOICES = [
 /* --- The avatar builder -------------------------------------------------- */
 
 export const BUILDER = {
-  title: 'Build a stand-in',
+  title: 'Choose a stand-in',
   blurb:
     "It doesn't have to look like you. Most people pick something that feels like how they'd want to be met.",
-  hairNote: 'each tile is you, with only the hair changed',
+  pickNote: 'Twelve portraits, a woman and a man at every age. Change it before any session.',
   carried: 'Your avatar is yours across every group you join.',
   saved: 'Saved to your profile, under your handle only.',
   motion: [

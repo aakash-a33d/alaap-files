@@ -8,7 +8,7 @@ import {
   OWN_GROUP,
   type Match,
 } from '../../../content/groups'
-import { BACKDROPS } from '../model/avatar'
+import { PORTRAITS } from '../model/avatar'
 import {
   Eyebrow,
   MONO,
@@ -217,7 +217,7 @@ function MatchCard({ match: m }: { match: Match }) {
             <li
               key={`in-${i}`}
               className="h-[22px] w-[22px] rounded-full"
-              style={{ background: BACKDROPS[i % BACKDROPS.length].seat }}
+              style={{ background: PORTRAITS[i % PORTRAITS.length].seat }}
             />
           ))}
           {Array.from({ length: m.open }, (_, i) => (
