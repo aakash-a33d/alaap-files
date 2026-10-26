@@ -58,6 +58,11 @@ function toPersona(row: Row): Persona {
 const COLUMNS = `pseudo_id, handle, avatar_seed, avatar_style, avatar_look, status, created_at`;
 const SELECT = `SELECT ${COLUMNS} FROM pseudo_profiles`;
 
+export interface GroupNameRow {
+  name: string;
+  setAt: string;
+}
+
 export interface CreateResult {
   persona: Persona;
   /** False when an earlier call already created it — see the idempotency note below. */
@@ -174,13 +179,57 @@ export class PersonaRepository {
     return rows[0]?.avatar_look;
   }
 
+  /** The member's name in one group, or undefined if they have not set one yet. */
+  async findGroupName(pseudoId: number, groupId: string): Promise<GroupNameRow | undefined> {
+    const { rows } = await this.pool.query<{ name: string; set_at: Date }>(
+      `SELECT name, set_at FROM group_names WHERE pseudo_id = $1 AND group_id = $2`,
+      [pseudoId, groupId],
+    );
+    const row = rows[0];
+    return row === undefined ? undefined : { name: row.name, setAt: row.set_at.toISOString() };
+  }
+
   /**
-   * The handle, when it was issued, and the avatar the member chose. Together they are
-   * the whole of the public identity.
+   * Set the member's name in a group, once.
+   *
+   * If a name is already there it is returned unchanged with `created: false`, and the
+   * caller refuses the request. The service has no UPDATE on this table, so there is no
+   * path that could overwrite it even by mistake; ON CONFLICT DO NOTHING also makes two
+   * simultaneous first saves safe, with the earlier one winning.
    */
-  async exportFor(
+  async setGroupName(
     pseudoId: number,
-  ): Promise<{ handle: string; createdAt: string; avatarLook: AvatarLook | null } | undefined> {
+    groupId: string,
+    name: string,
+  ): Promise<{ row: GroupNameRow; created: boolean }> {
+    const { rows } = await this.pool.query<{ name: string; set_at: Date }>(
+      `INSERT INTO group_names (pseudo_id, group_id, name) VALUES ($1, $2, $3)
+       ON CONFLICT (pseudo_id, group_id) DO NOTHING
+       RETURNING name, set_at`,
+      [pseudoId, groupId, name],
+    );
+    const inserted = rows[0];
+    if (inserted !== undefined) {
+      return { row: { name: inserted.name, setAt: inserted.set_at.toISOString() }, created: true };
+    }
+    const existing = await this.findGroupName(pseudoId, groupId);
+    if (existing === undefined) throw new Error('group name neither inserted nor found');
+    return { row: existing, created: false };
+  }
+
+  /**
+   * The handle, when it was issued, the avatar the member chose, and the name they go
+   * by in each group. Together they are the whole of what other members see.
+   */
+  async exportFor(pseudoId: number): Promise<
+    | {
+        handle: string;
+        createdAt: string;
+        avatarLook: AvatarLook | null;
+        groupNames: { groupId: string; name: string; setAt: string }[];
+      }
+    | undefined
+  > {
     const { rows } = await this.pool.query<{
       handle: string;
       created_at: Date;
@@ -189,9 +238,21 @@ export class PersonaRepository {
       pseudoId,
     ]);
     const row = rows[0];
-    return row === undefined
-      ? undefined
-      : { handle: row.handle, createdAt: row.created_at.toISOString(), avatarLook: row.avatar_look };
+    if (row === undefined) return undefined;
+    const names = await this.pool.query<{ group_id: string; name: string; set_at: Date }>(
+      `SELECT group_id, name, set_at FROM group_names WHERE pseudo_id = $1 ORDER BY set_at`,
+      [pseudoId],
+    );
+    return {
+      handle: row.handle,
+      createdAt: row.created_at.toISOString(),
+      avatarLook: row.avatar_look,
+      groupNames: names.rows.map((n) => ({
+        groupId: n.group_id,
+        name: n.name,
+        setAt: n.set_at.toISOString(),
+      })),
+    };
   }
 
   /**

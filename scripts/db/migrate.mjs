@@ -92,11 +92,16 @@ const PLAN = [
   // a new column on `pseudo_profiles`, which 0001_roles.shared.sql already grants on.
   { instance: 'shared', db: 'community_vault', file: 'database/migrations/community-vault/0006_avatar_look.sql' },
 
+  // The name a member goes by inside one group. A new table, so 0012 below grants on
+  // it, and must run after this file.
+  { instance: 'shared', db: 'community_vault', file: 'database/migrations/community-vault/0007_group_names.sql' },
+
   // --- later privilege changes ---------------------------------------------
   { instance: 'shared', db: 'postgres', file: 'database/policies/roles-grants/0008_reports_to_moderation.sql' },
   { instance: 'shared', db: 'postgres', file: 'database/policies/roles-grants/0009_retention.sql' },
   { instance: 'shared', db: 'postgres', file: 'database/policies/roles-grants/0010_retention_connect.sql' },
   { instance: 'shared', db: 'postgres', file: 'database/policies/roles-grants/0011_erasure_delete.sql' },
+  { instance: 'shared', db: 'postgres', file: 'database/policies/roles-grants/0012_group_names.sql' },
 ];
 
 /**

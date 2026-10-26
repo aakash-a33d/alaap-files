@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CHAT, GROUP, IN_SESSION_TASKS, SEATS, SESSION } from '../../../content/groups'
 import { ROOM_COUNT, useSpeakingCycle } from '../model/session'
+import { useMyGroupName } from '../model/groupName'
 import { useMyLook } from '../model/myLook'
 import { Avatar } from './Avatar'
 import { lookOf, ParticipantCircle, SeatMedia } from './ParticipantCircle'
@@ -47,6 +48,7 @@ export function SessionView({
      queue all read it, so the screen cannot say one name and show another. */
   const speaking = useSpeakingCycle(true)
   const speaker = speaking >= 0 ? SEATS[speaking] : null
+  const myName = useMyGroupName(GROUP.id)
 
 
   return (
@@ -187,8 +189,7 @@ export function SessionView({
 
                   <span className="absolute inset-x-0 bottom-0 bg-[linear-gradient(transparent,rgb(30_26_20/0.78))] px-4 pb-4 pt-10">
                     <span className="block text-[1.02rem] font-medium text-[#fdfcf8]">
-                      {speaker.name}
-                      {speaker.role === 'you' && ' · you'}
+                      {speaker.role === 'you' ? `${myName} · you` : speaker.name}
                     </span>
                     <span className="block text-[0.7rem] text-[rgb(253_252_248/0.74)]">
                       {speaker.role === 'therapist'
@@ -350,6 +351,7 @@ function ChatBubble({ line }: { line: (typeof CHAT)[number] }) {
   const myLook = useMyLook()
   const look = seat && lookOf(seat, myLook)
   const mine = line.from === 'you'
+  const myName = useMyGroupName(GROUP.id)
   const therapist = line.from === 'therapist'
 
   return (
@@ -377,7 +379,7 @@ function ChatBubble({ line }: { line: (typeof CHAT)[number] }) {
             therapist ? 'text-[var(--gr-terra-ink)]' : 'text-[var(--app-muted)]'
           }`}
         >
-          {line.who}
+          {mine ? `You · ${myName}` : line.who}
         </p>
         <p
           className={`px-3 py-2 text-left text-[0.78rem] leading-snug ${

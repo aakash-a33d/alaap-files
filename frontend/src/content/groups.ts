@@ -148,6 +148,9 @@ export const SPEAKING_CYCLE = [0, 3, 6, 1, 4, -1, 2]
 /* --- The group you are in ------------------------------------------------ */
 
 export const GROUP = {
+  /** Which group this is, for anything kept per group (the member's name in it).
+      A new cycle is a new group and gets a new id. */
+  id: 'health-anxiety-2026-c3',
   title: 'Living with health anxiety',
   /* When it meets is not written down here — see nextSessionAt below. A
      string and a countdown eventually disagree, and the string always wins
@@ -622,28 +625,23 @@ export const HIRE: Hire[] = [
 export const JOIN_STEP = {
   eyebrow: 'step 2 of 3 · before your first session',
   title: 'How do you want to be in the room?',
-  note: 'You can change any of this before each session. Nobody is told what you changed.',
+  note: 'Your name is set once for this group. How you appear can change before each session, and nobody is told what you changed.',
   privacy:
     'Sessions are never recorded. Live captions are generated on your device and discarded when the session ends.',
 } as const
 
-export const NAME_CHOICES = [
-  {
-    id: 'chosen',
-    title: 'A name you choose',
-    body: "Members see only this. Your therapist knows who you are; the group doesn't.",
-    value: 'Wren',
-    flag: 'AVAILABLE',
-    foot: 'suggestions · Wren · Ash · Halo · Nim',
-  },
-  {
-    id: 'real',
-    title: 'My real first name',
-    body: 'Some people find the honesty helps. Surnames are never shown to anyone.',
-    value: 'Imogen',
-    foot: 'from your account · not shown yet',
-  },
-] as const
+/* One box, not a choice between "a name you choose" and "my real first
+   name". Which kind of name it is is the member's business; the platform
+   only needs to know what to call them. */
+export const NAME_STEP = {
+  label: 'your name in the group',
+  hint: 'Any name you like, made up or your real first name. Members see only this; your therapist knows who you are.',
+  placeholder: 'e.g. Wren, Asha, Ravi',
+  suggestions: ['Wren', 'Ash', 'Halo', 'Nim'],
+  lockNote:
+    'This name stays the same for every session of this group. You can choose a new one when you join another group.',
+  locked: 'Locked for this group. You can choose a new name when you join another group.',
+} as const
 
 export const PRESENCE_CHOICES = [
   {

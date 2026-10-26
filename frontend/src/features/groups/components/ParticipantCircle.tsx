@@ -1,6 +1,7 @@
 import { useId } from 'react'
-import { SEATS, type Seat } from '../../../content/groups'
+import { GROUP, SEATS, type Seat } from '../../../content/groups'
 import { MEMBER_LOOKS, portraitOf, type AvatarLook } from '../model/avatar'
+import { useMyGroupName } from '../model/groupName'
 import { useMyLook } from '../model/myLook'
 import { usePrefersReducedMotion } from '../model/session'
 import { AvatarArt } from './Avatar'
@@ -107,6 +108,8 @@ export function ParticipantCircle({
   you?: AvatarLook
 }) {
   const reduced = usePrefersReducedMotion()
+  const myName = useMyGroupName(GROUP.id)
+  const nameOf = (s: Seat) => (s.role === 'you' ? myName : s.name)
   const live = speaking
   const dim = onDark ? 'rgb(244 241 234 / 0.5)' : 'var(--app-dim)'
 
@@ -199,8 +202,8 @@ export function ParticipantCircle({
           who is here and who is talking, which is all it ever says. */}
       <p className="sr-only">
         In the circle:{' '}
-        {SEATS.map((s) => `${s.name}${s.role === 'therapist' ? ' (therapist)' : ''}`).join(', ')}.{' '}
-        {live < 0 ? 'Nobody is speaking.' : `${SEATS[live].name} is speaking.`}
+        {SEATS.map((s) => `${nameOf(s)}${s.role === 'therapist' ? ' (therapist)' : ''}`).join(', ')}.{' '}
+        {live < 0 ? 'Nobody is speaking.' : `${nameOf(SEATS[live])} is speaking.`}
       </p>
     </div>
   )
@@ -224,6 +227,7 @@ function SeatFigure({
   you?: AvatarLook
 }) {
   const mine = useMyLook()
+  const myName = useMyGroupName(GROUP.id)
   const look = lookOf(seat, you ?? mine)
   /* Travelling to the middle is a move between two centres, which is why the
      seats are placed by centre: the figure grows about its own middle rather
@@ -307,7 +311,7 @@ function SeatFigure({
               opacity: on ? 1 : onDark ? 0.78 : 0.66,
             }}
           >
-            {seat.name}
+            {seat.role === 'you' ? myName : seat.name}
           </div>
           {role && (
             <div

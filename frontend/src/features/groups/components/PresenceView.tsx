@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { JOIN_STEP, NAME_CHOICES, PRESENCE_CHOICES } from '../../../content/groups'
+import { GROUP, JOIN_STEP, NAME_STEP, PRESENCE_CHOICES } from '../../../content/groups'
+import { GROUP_NAME_MAX, lockGroupName, nameProblem, useGroupName } from '../model/groupName'
 import { useMyLook } from '../model/myLook'
 import { Avatar } from './Avatar'
 import { Eyebrow, MONO, PILL_QUIET, PILL_SOLID, Panel, Title } from './parts'
@@ -7,25 +8,55 @@ import { Eyebrow, MONO, PILL_QUIET, PILL_SOLID, Panel, Title } from './parts'
 /* ============================================================================
    1h — before you join.
 
-   Anonymity is the default and it is the first card, at full size, with the
-   real-name option beside it at the same size. Hiding one behind an "advanced"
-   disclosure would be the product quietly stating a preference, and the whole
-   claim of group care here is that it does not have one.
+   The member's name in the group is one text box. It takes a made-up name or
+   a real first name alike, and the screen never asks which: offering the two
+   as separate options would be the product quietly stating a preference.
 
-   Every choice on this screen is reversible before every session, and the
-   screen says so at the top rather than in a help article. The line about
-   recording sits at the bottom next to the button that commits, which is
-   where somebody actually wonders about it.
+   The name is set once per group and then locked for every session of it,
+   because a closed group comes to know each other by these names over the
+   whole cycle. The box says so before the member commits, not after. How they
+   appear (avatar, camera, listening) stays changeable before every session.
+   The line about recording sits at the bottom next to the button that
+   commits, which is where somebody actually wonders about it.
    ========================================================================= */
+
+const SAVE_ERROR = "Couldn't save your name just now. It's still here, so try again."
 
 const CARD = 'rounded-[16px] bg-[var(--gr-paper)] p-5 text-left transition-colors'
 const CARD_ON = 'border-[1.5px] border-[var(--gr-terra)]'
 const CARD_OFF = 'border border-[var(--gr-line-strong)] hover:border-[var(--gr-terra-edge)]'
 
 export function PresenceView({ onBack, onSave }: { onBack: () => void; onSave: () => void }) {
-  const [name, setName] = useState<string>(NAME_CHOICES[0].id)
   const [presence, setPresence] = useState<string>(PRESENCE_CHOICES[0].id)
   const myLook = useMyLook()
+  const nameState = useGroupName(GROUP.id)
+  const [draft, setDraft] = useState('')
+  /* A problem is shown once the member tries to continue, not while they are
+     still typing the first letter. */
+  const [tried, setTried] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(false)
+  const problem = nameProblem(draft)
+  const showProblem = tried && problem !== undefined
+
+  async function save() {
+    if (nameState.status === 'locked') {
+      onSave()
+      return
+    }
+    setTried(true)
+    if (problem) return
+    setSaving(true)
+    setSaveError(false)
+    try {
+      await lockGroupName(GROUP.id, draft)
+      onSave()
+    } catch {
+      setSaveError(true)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-[860px] flex-col gap-5">
@@ -37,62 +68,82 @@ export function PresenceView({ onBack, onSave }: { onBack: () => void; onSave: (
         </p>
       </div>
 
-      {/* ---- what the group calls you ------------------------------------ */}
-      <fieldset className="border-0 p-0">
-        <legend className="sr-only">Your name in the group</legend>
-        <Eyebrow>your name in the group</Eyebrow>
-        <div role="radiogroup" aria-label="Your name in the group" className="mt-3 grid gap-3.5 sm:grid-cols-2">
-          {NAME_CHOICES.map((c) => {
-            const on = name === c.id
-            return (
-              <button
-                key={c.id}
-                type="button"
-                role="radio"
-                aria-checked={on}
-                onClick={() => setName(c.id)}
-                className={`relative ${CARD} ${on ? CARD_ON : CARD_OFF}`}
+      {/* ---- what the group calls you ------------------------------------
+          One box. Whether it holds a made-up name or a real first name is the
+          member's business, so the screen does not ask which. Once the group
+          has a name for them it is shown, locked, for the rest of the group. */}
+      <div>
+        <label htmlFor="group-name" className="block">
+          <Eyebrow>{NAME_STEP.label}</Eyebrow>
+        </label>
+        {nameState.status === 'locked' ? (
+          <div className="mt-3 rounded-[16px] border border-[var(--gr-line-strong)] bg-[var(--gr-paper)] p-5">
+            <div className="flex items-center gap-3 rounded-[11px] bg-[var(--gr-sand)] px-3.5 py-2.5">
+              <span
+                id="group-name"
+                className="flex-1 text-[0.95rem] font-semibold text-[var(--app-ink)]"
               >
-                <span
-                  aria-hidden="true"
-                  className={`absolute right-4 top-4 grid h-[19px] w-[19px] place-items-center rounded-full text-[0.66rem] text-white ${
-                    on
-                      ? 'bg-[var(--gr-terra)]'
-                      : 'border-[1.5px] border-[rgb(26_24_20/0.2)] bg-transparent'
-                  }`}
+                {nameState.name}
+              </span>
+              <span
+                className={`${MONO} inline-flex items-center gap-1.5 text-[0.6rem] uppercase tracking-[0.09em] text-[var(--app-muted)]`}
+              >
+                <LockIcon />
+                locked
+              </span>
+            </div>
+            <p className="mt-2.5 text-[0.74rem] leading-relaxed text-[var(--app-muted)]">
+              {NAME_STEP.locked}
+            </p>
+          </div>
+        ) : (
+          <div className="mt-3 rounded-[16px] border border-[var(--gr-line-strong)] bg-[var(--gr-paper)] p-5">
+            <p className="text-[0.76rem] leading-relaxed text-[var(--app-muted)]">{NAME_STEP.hint}</p>
+            <input
+              id="group-name"
+              type="text"
+              value={draft}
+              onChange={(e) => {
+                setDraft(e.target.value)
+                setTried(false)
+              }}
+              maxLength={GROUP_NAME_MAX + 8}
+              autoComplete="off"
+              spellCheck={false}
+              placeholder={NAME_STEP.placeholder}
+              aria-invalid={showProblem}
+              aria-describedby="group-name-note"
+              disabled={nameState.status === 'loading'}
+              className="mt-3 w-full rounded-[11px] border border-[var(--gr-line-strong)] bg-[var(--gr-sand)] px-3.5 py-2.5 text-[0.95rem] text-[var(--app-ink)] outline-none transition-colors placeholder:text-[var(--app-dim)] focus:border-[var(--gr-terra)] aria-[invalid=true]:border-[var(--gr-terra)]"
+            />
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <span className={`${MONO} text-[0.6rem] text-[var(--app-dim)]`}>suggestions ·</span>
+              {NAME_STEP.suggestions.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => {
+                    setDraft(n)
+                    setTried(false)
+                  }}
+                  className="rounded-full border border-[var(--gr-line-strong)] px-2.5 py-0.5 text-[0.7rem] text-[var(--app-muted)] transition-colors hover:border-[var(--gr-terra-edge)] hover:text-[var(--app-ink)]"
                 >
-                  {on ? '✓' : ''}
-                </span>
-                <span className="block pr-7 text-[0.9rem] font-semibold text-[var(--app-ink)]">
-                  {c.title}
-                </span>
-                <span className="mt-1.5 block text-[0.76rem] leading-relaxed text-[var(--app-muted)]">
-                  {c.body}
-                </span>
-                <span
-                  className={`mt-4 flex items-center gap-2.5 rounded-[11px] bg-[var(--gr-sand)] px-3.5 py-2.5 ${
-                    on ? '' : 'opacity-55'
-                  }`}
-                >
-                  <span
-                    className={`flex-1 text-[0.86rem] ${
-                      on ? 'text-[var(--app-ink)]' : 'text-[var(--app-muted)]'
-                    }`}
-                  >
-                    {c.value}
-                  </span>
-                  {'flag' in c && c.flag && (
-                    <span className={`${MONO} text-[0.6rem] text-[var(--gr-green)]`}>{c.flag}</span>
-                  )}
-                </span>
-                <span className={`${MONO} mt-2 block text-[0.6rem] text-[var(--app-dim)]`}>
-                  {c.foot}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      </fieldset>
+                  {n}
+                </button>
+              ))}
+            </div>
+            <p
+              id="group-name-note"
+              role={showProblem || saveError ? 'alert' : undefined}
+              className={`mt-3 text-[0.72rem] leading-relaxed ${
+                showProblem || saveError ? 'text-[var(--gr-terra-ink)]' : 'text-[var(--app-dim)]'
+              }`}
+            >
+              {showProblem ? problem : saveError ? SAVE_ERROR : NAME_STEP.lockNote}
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* ---- and what they see ------------------------------------------- */}
       <fieldset className="border-0 p-0">
@@ -154,11 +205,25 @@ export function PresenceView({ onBack, onSave }: { onBack: () => void; onSave: (
           <button type="button" onClick={onBack} className={PILL_QUIET}>
             Back to avatar
           </button>
-          <button type="button" onClick={onSave} className={PILL_SOLID}>
-            Save and continue
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving || nameState.status === 'loading'}
+            className={PILL_SOLID}
+          >
+            {saving ? 'Saving…' : 'Save and continue'}
           </button>
         </div>
       </Panel>
     </div>
+  )
+}
+
+function LockIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 12 12" className="h-3 w-3" fill="none">
+      <rect x="2.5" y="5.5" width="7" height="5" rx="1.2" fill="currentColor" />
+      <path d="M4 5.5V4a2 2 0 0 1 4 0v1.5" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
   )
 }

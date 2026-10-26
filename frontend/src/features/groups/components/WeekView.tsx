@@ -9,6 +9,7 @@ import {
   SHORTLIST_NOTE,
   TASKS,
 } from '../../../content/groups'
+import { useMyGroupName } from '../model/groupName'
 import { useSessionClock } from '../model/session'
 import { ParticipantCircle } from './ParticipantCircle'
 import {
@@ -56,6 +57,7 @@ export function WeekView({
   const open = TASKS.filter((t) => !t.done)
   const done = TASKS.filter((t) => t.done)
   const clock = useSessionClock()
+  const myName = useMyGroupName(GROUP.id, '')
 
   return (
     <div className="flex flex-col gap-5">
@@ -156,8 +158,14 @@ export function WeekView({
               looking at beforehand rather than in a settings page. */}
           <p className="mt-4 flex flex-wrap items-center gap-1.5 text-[0.76rem] text-[var(--app-muted)]">
             <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[var(--gr-green)]" />
-            You’ll join as{' '}
-            <span className="font-semibold text-[var(--app-ink)]">Wren</span>, {GROUP.presence}.
+            {myName ? (
+              <>
+                You’ll join as{' '}
+                <span className="font-semibold text-[var(--app-ink)]">{myName}</span>, {GROUP.presence}.
+              </>
+            ) : (
+              <>You haven’t chosen your name in this group yet.</>
+            )}
             <button
               type="button"
               onClick={onChangePresence}

@@ -14,6 +14,7 @@ import type { AuditClient } from '@alaap/audit-client';
 import { z } from 'zod';
 
 import { AvatarLook } from '../domain/avatar.ts';
+import { GroupId, SetGroupNameBody } from '../domain/group-name.ts';
 import type { HandlePolicy } from '../domain/handle.ts';
 import type { PersonaRepository } from '../infrastructure/personas.ts';
 
@@ -198,6 +199,66 @@ export function createApp(deps: AppDeps): Express {
         return;
       }
       res.status(200).json({ avatarLook });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  /**
+   * The caller's name in one group: `{ name, setAt }`, or `{ name: null }` before they
+   * have set one. Only ever the caller's own; there is no route that reads another
+   * member's group name, because nothing on the platform needs one yet.
+   */
+  app.get('/api/pseudonym/me/groups/:groupId/name', gated, async (req, res, next) => {
+    try {
+      const pseudoId = req.caller?.pseudoId;
+      if (pseudoId === undefined) {
+        res.status(401).json({ error: { code: 'no_session' } });
+        return;
+      }
+      const groupId = GroupId.safeParse(req.params.groupId);
+      if (!groupId.success) {
+        res.status(400).json({ error: { code: 'invalid_request' } });
+        return;
+      }
+      const row = await deps.personas.findGroupName(pseudoId, groupId.data);
+      res.status(200).json(row ?? { name: null });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  /**
+   * Set the caller's name in a group. Once: a second attempt is 409 `name_locked`
+   * with the name that stands, so the client can show it rather than an error.
+   *
+   * Not audited, like the avatar: it is the member's own choice about how they appear
+   * to a group, and a log of it would put a name, possibly a real one, into a trail
+   * staff read.
+   */
+  app.post('/api/pseudonym/me/groups/:groupId/name', gated, async (req, res, next) => {
+    try {
+      const pseudoId = req.caller?.pseudoId;
+      if (pseudoId === undefined) {
+        res.status(401).json({ error: { code: 'no_session' } });
+        return;
+      }
+      const groupId = GroupId.safeParse(req.params.groupId);
+      const body = SetGroupNameBody.safeParse(req.body);
+      if (!groupId.success || !body.success) {
+        res.status(400).json({ error: { code: 'invalid_request' } });
+        return;
+      }
+      const { row, created } = await deps.personas.setGroupName(
+        pseudoId,
+        groupId.data,
+        body.data.name,
+      );
+      if (!created) {
+        res.status(409).json({ error: { code: 'name_locked', name: row.name, setAt: row.setAt } });
+        return;
+      }
+      res.status(201).json(row);
     } catch (err) {
       next(err);
     }

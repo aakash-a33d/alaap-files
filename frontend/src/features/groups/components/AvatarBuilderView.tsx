@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { BUILDER } from '../../../content/groups'
+import { BUILDER, GROUP } from '../../../content/groups'
+import { useMyGroupName } from '../model/groupName'
 import {
   AGE_BANDS,
   GENDERS,
@@ -36,6 +37,7 @@ const SWATCH_OFF = 'border border-[var(--gr-line-strong)] hover:border-[var(--gr
 
 export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
   const saved = useMyLook()
+  const myName = useMyGroupName(GROUP.id)
   const [look, setLook] = useState<AvatarLook>(saved)
   const [preview, setPreview] = useState(false)
   const [motion, setMotion] = useState('move')
@@ -88,7 +90,7 @@ export function AvatarBuilderView({ onNext, onSkip }: { onNext: () => void; onSk
           </span>
         )}
         <div className="text-center">
-          <p className={`${SERIF} text-[1.3rem] text-[var(--app-ink)]`}>Wren</p>
+          <p className={`${SERIF} text-[1.3rem] text-[var(--app-ink)]`}>{myName}</p>
           <p
             className={`${MONO} mt-1 text-[0.6rem] uppercase tracking-[0.09em] text-[var(--app-muted)]`}
           >
