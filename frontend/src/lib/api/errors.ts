@@ -107,3 +107,17 @@ export class NetworkError extends Error {
     this.cause = cause
   }
 }
+
+/**
+ * The platform could not be reached, as opposed to it answering "no".
+ *
+ * Either the network never got there, or something in front of the services
+ * answered for them: the gateway or the dev proxy says 502, 503 or 504 when the
+ * service behind it is down, with none of the service's own error codes. A
+ * screen that turns this into "check what you typed" sends the member looking
+ * for a mistake they did not make.
+ */
+export function isUnreachable(err: unknown): boolean {
+  if (err instanceof NetworkError) return true
+  return err instanceof ApiError && [502, 503, 504].includes(err.status) && err.code === 'unknown'
+}

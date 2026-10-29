@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CLINICIAN,
@@ -802,6 +802,17 @@ function CheckIn({
 export default function Dashboard() {
   const [tab, setTab] = useState<TabId>('dashboard')
 
+  /* A new tab starts at its top. The tabs share one scrolling column, so
+     without this, switching kept the last tab's position and landed somebody
+     halfway down a page they had never seen, which is where finishing group
+     setup used to drop them. Below 640px the window scrolls instead, so both
+     are reset. */
+  const mainRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 })
+    window.scrollTo({ top: 0 })
+  }, [tab])
+
   /* Setting up how you appear in a group room is owned here rather than by
      the Groups tab, because it is reached from two places that do not share a
      tree: your profile card on this screen, and the door into a first
@@ -979,6 +990,7 @@ export default function Dashboard() {
           positioned rather than laid out, so that opening it slides over the
           page instead of shoving it sideways. */}
       <div
+        ref={mainRef}
         className={`app-main flex min-h-0 min-w-0 flex-1 flex-col pb-[calc(66px+env(safe-area-inset-bottom))] sm:pb-0 sm:pl-[74px] ${
           tab === 'dashboard' ? 'app-main--split' : ''
         }`}
@@ -1348,18 +1360,18 @@ export default function Dashboard() {
         onClose={() => setSetup(null)}
         onComplete={() => {
           setSetupComplete(true)
-          /* Somebody who was stopped on their way into a room is taken there,
-             not returned to the card they clicked. */
-          if (setup?.pending) {
-            setTab('groups')
-            setInSession(true)
-          }
+          /* Finishing setup always lands in the group, wherever it was opened
+             from: setting up how you appear in a group and then being left on
+             the dashboard reads as the save having failed. Somebody who was
+             stopped on their way into a room goes on into it. */
+          setTab('groups')
+          if (setup?.pending) setInSession(true)
           setSetup(null)
         }}
         completeLabel={
           setup?.pending
             ? 'Saving takes you into the waiting room.'
-            : undefined
+            : 'Saving takes you to your group.'
         }
       />
     </div>

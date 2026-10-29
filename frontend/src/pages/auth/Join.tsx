@@ -6,7 +6,7 @@ import {
   registerStart,
   registerVerify,
 } from '../../features/auth/api/auth'
-import { ApiError } from '../../lib/api/errors'
+import { ApiError, isUnreachable } from '../../lib/api/errors'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { gsap, useGSAP } from '../../utils/gsap'
 import {
@@ -400,7 +400,9 @@ export default function Join() {
       setPhoneMsg(
         err instanceof ApiError && err.status === 429
           ? 'A code was sent a moment ago. Wait a minute before asking for another.'
-          : 'We could not send a code just now. Check the number and try again.',
+          : isUnreachable(err)
+            ? 'We can’t reach Alaap right now. Your number is fine. Try again in a minute.'
+            : 'We could not send a code just now. Check the number and try again.',
       )
       phoneRef.current?.focus()
     } finally {
@@ -446,7 +448,9 @@ export default function Join() {
       setCodeError(
         err instanceof ApiError && err.status === 401
           ? 'That code was not right, or it has expired. Ask for a new one.'
-          : 'We could not check that code just now. Try again in a moment.',
+          : isUnreachable(err)
+            ? 'We can’t reach Alaap right now. Your code still works for a few minutes. Try again shortly.'
+            : 'We could not check that code just now. Try again in a moment.',
       )
       codeRef.current?.focus()
     } finally {
