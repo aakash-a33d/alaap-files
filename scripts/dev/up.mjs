@@ -251,4 +251,9 @@ async function up() {
 const arg = process.argv[2];
 if (arg === '--status') await status();
 else if (arg === '--stop') stop();
-else process.exit(await up());
+// exitCode, not process.exit(): exiting while fetch's keep-alive sockets are still
+// closing trips a libuv assertion on Windows (`!(handle->flags &
+// UV_HANDLE_CLOSING)`), so every run ended in a crash code even when the whole
+// stack came up. The services are spawned detached and unref'd, so letting the
+// event loop drain ends the process just as promptly.
+else process.exitCode = await up();
